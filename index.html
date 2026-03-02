@@ -191,6 +191,7 @@
                 <div class="d-flex gap-2">
                     <select id="bankSelect" class="form-select form-select-sm" style="width: 250px;" onchange="selectBank(this.value)"><option value="">-- เลือกบัญชีที่บันทึกไว้ --</option></select>
                     <button class="btn btn-outline-success btn-sm fw-bold" onclick="saveBankToDb()" title="บันทึกบัญชีนี้">+</button>
+                    <button class="btn btn-outline-danger btn-sm fw-bold" onclick="deleteBankFromDb()" title="ลบบัญชีที่เลือกอยู่">×</button>
                 </div>
             </div>
             <div class="col-md-3"><input type="text" id="bankName" class="form-control form-control-sm" placeholder="ชื่อธนาคาร" oninput="updatePreview()"></div>
@@ -397,7 +398,36 @@
         document.getElementById('bankNo').value = b.no; document.getElementById('bankType').value = b.type;
         updatePreview();
     }
+// ฟังก์ชันสำหรับลบธนาคารที่เลือกอยู่
+function deleteBankFromDb() {
+    const select = document.getElementById('bankSelect');
+    const idx = select.value; // ดึงลำดับ (Index) ที่เลือกอยู่ใน Dropdown
 
+    if (idx === "") {
+        alert("กรุณาเลือกบัญชีธนาคารที่ต้องการลบจากรายการก่อนครับ");
+        return;
+    }
+
+    if (confirm("คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลบัญชีธนาคารนี้?")) {
+        // 1. ลบข้อมูลออกจากตัวแปร banks (ที่เป็น Array)
+        banks.splice(idx, 1);
+        
+        // 2. บันทึกข้อมูลที่เหลือกลับลงไปใน localStorage
+        localStorage.setItem(BANK_KEY, JSON.stringify(banks));
+        
+        // 3. อัพเดท Dropdown บนหน้าจอให้เป็นปัจจุบัน
+        updateBankDropdown();
+        
+        // 4. ล้างช่องกรอกข้อมูลให้ว่าง
+        document.getElementById('bankName').value = "";
+        document.getElementById('bankAccName').value = "";
+        document.getElementById('bankNo').value = "";
+        document.getElementById('bankType').value = "";
+        
+        alert("ลบข้อมูลเรียบร้อยแล้ว");
+        updatePreview(); // อัพเดทตัวอย่างใบเสร็จด้วย
+    }
+}
     function toggleCustPanel() { const p = document.getElementById('custDbPanel'); p.style.display = (p.style.display === 'block') ? 'none' : 'block'; }
     function saveCustomer() {
         const name = document.getElementById('dbCustName').value.trim(); const addr = document.getElementById('dbCustAddr').value.trim(); 
@@ -648,4 +678,5 @@
     };
 </script>
 </body>
+
 </html>
