@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TerraTech Innovations - Automatic Ledger v16</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .container { max-width: 900px; }
+        .main-card { border-radius: 24px; border: none; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); background: #fff; overflow: hidden; }
+        .brand-header { background: #0f172a; color: #f8fafc; padding: 40px 20px; }
+        .drop-zone { border: 2px dashed #3b82f6; border-radius: 20px; padding: 60px 20px; cursor: pointer; transition: 0.3s; background: #f1f5f9; text-align: center; }
+        .drop-zone:hover { background: #eff6ff; border-color: #2563eb; }
+        .data-input { background-color: #f1f5f9 !important; font-weight: 600; color: #2563eb; border: 1px solid #cbd5e1; }
+        #loader { display: none; }
+        .status-pill { padding: 6px 16px; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; display: inline-block; }
+        .table-container { background: #fff; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); overflow: hidden; }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    <div class="main-card mb-5">
+        <div class="brand-header text-center">
+            <h2 class="fw-bold mb-1">TerraTech Innovations Co., Ltd.</h2>
+            <p class="mb-0 opacity-75">ระบบบันทึกบัญชีอัตโนมัติผ่าน Thunder API v16</p>
+        </div>
+
+        <div class="card-body p-4 p-md-5">
+            <div class="row g-4">
+                <div class="col-md-5">
+                    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                        <div id="prompt">
+                            <i class="mb-3 d-block fs-1">📤</i>
+                            <h6 class="fw-bold">อัปโหลดสลิปธนาคาร</h6>
+                            <p class="small text-muted mb-0">ระบบจะดึงข้อมูลวันที่ 100%<br>จาก QR Code</p>
+                        </div>
+                        <img id="preview" class="img-fluid rounded d-none" style="max-height: 250px;">
+                        <input type="file" id="fileInput" hidden accept="image/*">
+                    </div>
+
+                    <div id="loader" class="text-center mt-4">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="small mt-2 fw-bold text-primary">กำลังตรวจสอบสลิปกับธนาคาร...</p>
+                    </div>
+
+                    <div id="statusUI" class="mt-4 text-center d-none">
+                        <span id="statusLabel" class="status-pill"></span>
+                    </div>
+                </div>
+
+                <div class="col-md-7 border-start ps-md-4">
+                    <form id="accountingForm" class="row g-3">
+                        <div class="col-md-7">
+                            <label class="form-label fw-bold">วันที่ธุรกรรม</label>
+                            <input type="date" id="dateInput" class="form-control data-input" readonly required>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold">เวลา</label>
+                            <input type="text" id="timeInput" class="form-control data-input" readonly placeholder="--:--">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">ยอดเงินสุทธิ</label>
+                            <div class="input-group">
+                                <input type="number" id="amountInput" class="form-control data-input fs-4" readonly step="0.01">
+                                <span class="input-group-text">บาท</span>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">ชื่อผู้โอน (จากธนาคาร)</label>
+                            <input type="text" id="senderInput" class="form-control data-input" readonly>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">บันทึกช่วยจำ / รายละเอียดเพิ่มเติม</label>
+                            <textarea id="memoInput" class="form-control" rows="2" placeholder="กรอกข้อมูลเพิ่มเติมที่นี่..."></textarea>
+                        </div>
+                        
+                        <div class="col-12 text-end pt-3">
+                            <button type="button" class="btn btn-link text-muted me-2" onclick="location.reload()">ล้างค่า</button>
+                            <button type="submit" id="saveBtn" class="btn btn-primary btn-lg px-5 shadow fw-bold" disabled>บันทึกลงฐานข้อมูล</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th class="ps-4">วันที่/เวลา</th>
+                    <th>รายการ</th>
+                    <th class="text-end pe-4">จำนวนเงิน</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // ฝัง API Key เรียบร้อยแล้ว
+    const THUNDER_API_KEY = "44187dbd-e676-4c3a-bcf6-8cdf38622f3e";
+    let db = JSON.parse(localStorage.getItem('terra_v16')) || [];
+
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // UI Feedback
+        document.getElementById('preview').src = URL.createObjectURL(file);
+        document.getElementById('preview').classList.remove('d-none');
+        document.getElementById('prompt').classList.add('d-none');
+        document.getElementById('loader').style.display = 'block';
+        document.getElementById('statusUI').classList.add('d-none');
+
+        const reader = new FileReader();
+        reader.onload = function() {
+            const img = new Image();
+            img.onload = async function() {
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0, img.width, img.height);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+                
+                if (code) {
+                    await verifyWithThunder(code.data);
+                } else {
+                    updateStatus("❌ ไม่พบ QR Code ในภาพสลิป", "bg-danger text-white");
+                    document.getElementById('loader').style.display = 'none';
+                }
+            };
+            img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    async function verifyWithThunder(payload) {
+        try {
+            const response = await fetch('https://api.thundersolution.net/v1/verify', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${THUNDER_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ qrcode: payload })
+            });
+
+            const result = await response.json();
+
+            if (result.status === "success") {
+                const data = result.data;
+                
+                // กรอกข้อมูลลงฟอร์มให้อัตโนมัติ
+                document.getElementById('dateInput').value = data.date;
+                document.getElementById('timeInput').value = data.time || "--:--";
+                document.getElementById('amountInput').value = data.amount;
+                document.getElementById('senderInput').value = (data.sender.name || data.sender);
+                
+                document.getElementById('saveBtn').disabled = false;
+                updateStatus("✅ ตรวจสอบสลิปเรียบร้อย", "bg-success text-white");
+            } else {
+                updateStatus("❌ API Error: " + result.message, "bg-danger text-white");
+            }
+        } catch (err) {
+            updateStatus("❌ เชื่อมต่อ API ไม่สำเร็จ", "bg-danger text-white");
+        } finally {
+            document.getElementById('loader').style.display = 'none';
+        }
+    }
+
+    function updateStatus(text, className) {
+        const label = document.getElementById('statusLabel');
+        label.innerText = text;
+        label.className = "status-pill " + className;
+        document.getElementById('statusUI').classList.remove('d-none');
+    }
+
+    document.getElementById('accountingForm').onsubmit = (e) => {
+        e.preventDefault();
+        const entry = {
+            date: document.getElementById('dateInput').value,
+            time: document.getElementById('timeInput').value,
+            amount: document.getElementById('amountInput').value,
+            sender: document.getElementById('senderInput').value,
+            memo: document.getElementById('memoInput').value
+        };
+        db.push(entry);
+        localStorage.setItem('terra_v16', JSON.stringify(db));
+        alert("บันทึกข้อมูลเรียบร้อยแล้ว!");
+        location.reload();
+    };
+
+    function renderTable() {
+        const body = document.getElementById('tableBody');
+        body.innerHTML = '';
+        db.sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 10).forEach(item => {
+            body.innerHTML += `
+                <tr>
+                    <td class="ps-4"><b>${item.date}</b><br><small class="text-muted">${item.time}</small></td>
+                    <td><small class="fw-bold">จาก:</small> ${item.sender}<br><small class="text-muted">${item.memo || '-'}</small></td>
+                    <td class="text-end pe-4 fw-bold text-primary">${parseFloat(item.amount).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+                </tr>`;
+        });
+    }
+
+    renderTable();
+</script>
+
+</body>
+</html>
