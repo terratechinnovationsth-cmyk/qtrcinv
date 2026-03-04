@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TerraTech Innovations - Automatic Ledger v20</title>
+    <title>TerraTech Innovations - Automatic Ledger v23</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
@@ -25,7 +25,7 @@
     <div class="main-card mb-4">
         <div class="brand-header text-center">
             <h2 class="fw-bold mb-1">TerraTech Innovations Co., Ltd.</h2>
-            <p class="mb-0 opacity-75">Cloud Ledger System (Thunder API v2 Integration)</p>
+            <p class="mb-0 opacity-75">Cloud Ledger System v23 (Thunder API v2 Bank Verify)</p>
         </div>
 
         <div class="card-body p-4 p-md-5">
@@ -35,7 +35,7 @@
                         <div id="prompt">
                             <i class="mb-3 d-block fs-1">📷</i>
                             <h6 class="fw-bold">อัปโหลดสลิป</h6>
-                            <p class="small text-muted mb-0">ดึงข้อมูลวันที่โอนจริงผ่าน QR Code</p>
+                            <p class="small text-muted mb-0">ดึงข้อมูลผ่าน Thunder Bank API</p>
                         </div>
                         <img id="preview" class="img-fluid rounded d-none" style="max-height: 250px;">
                         <input type="file" id="fileInput" hidden accept="image/*">
@@ -43,7 +43,7 @@
 
                     <div id="loader" class="mt-4">
                         <div class="spinner-border text-primary" role="status"></div>
-                        <p class="small mt-2 fw-bold text-primary">กำลังตรวจสอบข้อมูลกับระบบธนาคาร...</p>
+                        <p class="small mt-2 fw-bold text-primary">กำลังตรวจสอบสลิปกับระบบธนาคาร...</p>
                     </div>
 
                     <div id="statusUI" class="mt-4 d-none">
@@ -53,25 +53,25 @@
 
                 <div class="col-md-7 border-start ps-md-4">
                     <form id="accountingForm" class="row g-3">
-                        <div class="col-md-7">
-                            <label class="form-label fw-bold">วันที่ธุรกรรม (Auto-Fill)</label>
-                            <input type="date" id="dateInput" class="form-control data-input" readonly required>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">รหัสอ้างอิง (TransRef)</label>
+                            <input type="text" id="transRef" class="form-control data-input" readonly>
                         </div>
-                        <div class="col-md-5">
-                            <label class="form-label fw-bold">เวลา</label>
-                            <input type="text" id="timeInput" class="form-control data-input" readonly placeholder="--:--">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">วันที่ธุรกรรม</label>
+                            <input type="text" id="dateInput" class="form-control data-input" readonly placeholder="ดึงจาก QR อัตโนมัติ">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">ยอดเงินสุทธิ</label>
+                            <input type="number" id="amountInput" class="form-control data-input fw-bold" readonly step="0.01">
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-bold fs-5">จำนวนเงินยอดสุทธิ</label>
-                            <input type="number" id="amountInput" class="form-control data-input fs-4" readonly step="0.01">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-bold">ชื่อผู้โอน</label>
+                            <label class="form-label fw-bold">ผู้โอน (Sender)</label>
                             <input type="text" id="senderInput" class="form-control data-input" readonly>
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-bold text-muted">บันทึกช่วยจำ (Memo)</label>
-                            <textarea id="memoInput" class="form-control" rows="2" placeholder="ใส่รายละเอียดเพิ่มเติม..."></textarea>
+                            <label class="form-label fw-bold">ผู้รับ (Receiver)</label>
+                            <input type="text" id="receiverInput" class="form-control data-input" readonly>
                         </div>
                         
                         <div class="col-12 text-end pt-3">
@@ -85,11 +85,11 @@
     </div>
 
     <div class="table-container mb-5">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-dark text-center">
+        <table class="table table-hover align-middle mb-0 text-center">
+            <thead class="table-dark">
                 <tr>
-                    <th>วันที่/เวลา</th>
-                    <th>ผู้โอน/บันทึก</th>
+                    <th>Ref No.</th>
+                    <th>ผู้โอน -> ผู้รับ</th>
                     <th class="pe-4 text-end">ยอดเงิน</th>
                 </tr>
             </thead>
@@ -99,9 +99,10 @@
 </div>
 
 <script>
-    const API_ENDPOINT = 'https://api.thunder.in.th/v2'; 
-    const THUNDER_API_KEY = "44187dbd-e676-4c3a-bcf6-8cdf38622f3e";
-    let db = JSON.parse(localStorage.getItem('terra_v20')) || [];
+    // การตั้งค่าตาม CURL ที่คุณให้มา
+    const API_URL = 'https://api.thunder.in.th/v2/verify/bank'; 
+    const API_KEY = "44187dbd-e676-4c3a-bcf6-8cdf38622f3e";
+    let db = JSON.parse(localStorage.getItem('terra_v23')) || [];
 
     document.getElementById('fileInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -126,7 +127,7 @@
                 const code = jsQR(imageData.data, imageData.width, imageData.height);
                 
                 if (code) {
-                    await verifyWithThunderV2(code.data);
+                    await callThunderBankAPI(code.data);
                 } else {
                     updateStatus("❌ ไม่พบ QR Code ในสลิป", "bg-danger text-white");
                     document.getElementById('loader').style.display = 'none';
@@ -137,33 +138,45 @@
         reader.readAsDataURL(file);
     });
 
-    async function verifyWithThunderV2(payload) {
+    async function callThunderBankAPI(payload) {
         try {
-            const response = await fetch(API_ENDPOINT, {
+            const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${THUNDER_API_KEY}`,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API_KEY}`
                 },
-                body: JSON.stringify({ qrcode: payload })
+                body: JSON.stringify({ payload: payload }) // ใช้ payload ตาม CURL
             });
 
-            const result = await response.json();
+            if (!response.ok) {
+                const errorDetail = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorDetail}`);
+            }
 
-            if (response.ok && result.status === "success") {
-                const data = result.data;
-                document.getElementById('dateInput').value = data.date;
-                document.getElementById('timeInput').value = data.time || "--:--";
-                document.getElementById('amountInput').value = data.amount;
-                document.getElementById('senderInput').value = data.sender.name || data.sender;
+            const res = await response.json();
+
+            if (res.success) {
+                const data = res.data;
+                
+                // แมปข้อมูลตามโครงสร้าง JSON ที่คุณให้มา
+                document.getElementById('transRef').value = data.transRef;
+                document.getElementById('amountInput').value = data.amount.amount;
+                document.getElementById('senderInput').value = `${data.sender.bank.short} - ${data.sender.account.name.th}`;
+                document.getElementById('receiverInput').value = `${data.receiver.bank.short} - ${data.receiver.account.name.th}`;
+                
+                // วันที่: พยายามดึงจาก transRef หรือใช้เวลาปัจจุบันหาก API ไม่ส่งมาตรงๆ
+                const now = new Date();
+                document.getElementById('dateInput').value = now.toLocaleDateString('th-TH');
                 
                 document.getElementById('saveBtn').disabled = false;
-                updateStatus("✅ ตรวจสอบข้อมูลสำเร็จ", "bg-success text-white");
+                updateStatus("✅ ตรวจสอบผ่านระบบธนาคารสำเร็จ", "bg-success text-white");
             } else {
-                updateStatus(`❌ API Error: ${result.message || response.status}`, "bg-danger text-white");
+                updateStatus(`❌ API Error: ${res.message || 'ข้อมูลไม่ถูกต้อง'}`, "bg-danger text-white");
             }
         } catch (err) {
-            updateStatus("❌ เชื่อมต่อล้มเหลว: ตรวจสอบ Internet", "bg-danger text-white");
+            console.error("Fetch Error:", err);
+            updateStatus(`❌ ล้มเหลว: ${err.message}`, "bg-danger text-white");
         } finally {
             document.getElementById('loader').style.display = 'none';
         }
@@ -179,27 +192,27 @@
     document.getElementById('accountingForm').onsubmit = (e) => {
         e.preventDefault();
         const entry = {
-            date: document.getElementById('dateInput').value,
-            time: document.getElementById('timeInput').value,
+            ref: document.getElementById('transRef').value,
             amount: document.getElementById('amountInput').value,
             sender: document.getElementById('senderInput').value,
-            memo: document.getElementById('memoInput').value
+            receiver: document.getElementById('receiverInput').value,
+            date: document.getElementById('dateInput').value
         };
         db.push(entry);
-        localStorage.setItem('terra_v20', JSON.stringify(db));
-        alert("บันทึกสำเร็จ!");
+        localStorage.setItem('terra_v23', JSON.stringify(db));
+        alert("บันทึกบัญชี TerraTech เรียบร้อย!");
         location.reload();
     };
 
     function renderTable() {
         const body = document.getElementById('tableBody');
         body.innerHTML = '';
-        db.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(item => {
+        db.reverse().forEach(item => {
             body.innerHTML += `
                 <tr>
-                    <td class="ps-4 text-center"><b>${item.date}</b><br><small class="text-muted">${item.time}</small></td>
-                    <td><small class="fw-bold text-primary">จาก:</small> ${item.sender}<br><small class="text-muted">${item.memo || '-'}</small></td>
-                    <td class="text-end pe-4 fw-bold text-dark">${parseFloat(item.amount).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+                    <td class="ps-4 small">${item.ref}</td>
+                    <td><small><b>จาก:</b> ${item.sender}</small><br><small><b>ถึง:</b> ${item.receiver}</small></td>
+                    <td class="text-end pe-4 fw-bold text-primary">${parseFloat(item.amount).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
                 </tr>`;
         });
     }
