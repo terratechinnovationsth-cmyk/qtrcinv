@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TerraTech Innovations - Enterprise Ledger v18</title>
+    <title>TerraTech Innovations - Automatic Ledger v20</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <style>
-        body { font-family: 'Sarabun', sans-serif; background-color: #f1f5f9; color: #334155; }
-        .main-card { border-radius: 20px; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1); background: #fff; overflow: hidden; margin-top: 2rem; }
-        .brand-header { background: #1e293b; color: #f8fafc; padding: 40px 20px; }
-        .drop-zone { border: 2px dashed #3b82f6; border-radius: 20px; padding: 50px 20px; cursor: pointer; transition: 0.3s; background: #fff; text-align: center; }
-        .drop-zone:hover { background: #f8fafc; border-color: #2563eb; }
-        .data-input { background-color: #f8fafc !important; font-weight: 600; color: #0f172a; border: 1px solid #e2e8f0; }
+        body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .main-card { border-radius: 24px; border: none; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); background: #fff; overflow: hidden; margin-top: 2rem; }
+        .brand-header { background: #0f172a; color: #f8fafc; padding: 40px 20px; }
+        .drop-zone { border: 2px dashed #3b82f6; border-radius: 20px; padding: 60px 20px; cursor: pointer; transition: 0.3s; background: #f1f5f9; text-align: center; }
+        .drop-zone:hover { background: #eff6ff; border-color: #2563eb; }
+        .data-input { background-color: #f1f5f9 !important; font-weight: 600; color: #2563eb; border: 1px solid #cbd5e1; }
         #loader { display: none; }
-        .status-pill { padding: 10px 20px; border-radius: 50px; font-size: 0.9rem; font-weight: 600; display: inline-block; margin-top: 1rem; }
+        .status-pill { padding: 8px 20px; border-radius: 9999px; font-size: 0.9rem; font-weight: 600; display: inline-block; }
         .table-container { background: #fff; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); overflow: hidden; margin-top: 2rem; }
     </style>
 </head>
@@ -25,7 +25,7 @@
     <div class="main-card mb-4">
         <div class="brand-header text-center">
             <h2 class="fw-bold mb-1">TerraTech Innovations Co., Ltd.</h2>
-            <p class="mb-0 opacity-75">Cloud-Based Slip Verification System (v18)</p>
+            <p class="mb-0 opacity-75">Cloud Ledger System (Thunder API v2 Integration)</p>
         </div>
 
         <div class="card-body p-4 p-md-5">
@@ -33,9 +33,9 @@
                 <div class="col-md-5 text-center">
                     <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
                         <div id="prompt">
-                            <i class="mb-3 d-block fs-1">📎</i>
-                            <h6 class="fw-bold">เลือกภาพสลิปธนาคาร</h6>
-                            <p class="small text-muted mb-0">ดึงข้อมูลวันที่โอนและยอดเงินจริง<br>ผ่าน QR Code</p>
+                            <i class="mb-3 d-block fs-1">📷</i>
+                            <h6 class="fw-bold">อัปโหลดสลิป</h6>
+                            <p class="small text-muted mb-0">ดึงข้อมูลวันที่โอนจริงผ่าน QR Code</p>
                         </div>
                         <img id="preview" class="img-fluid rounded d-none" style="max-height: 250px;">
                         <input type="file" id="fileInput" hidden accept="image/*">
@@ -43,18 +43,18 @@
 
                     <div id="loader" class="mt-4">
                         <div class="spinner-border text-primary" role="status"></div>
-                        <p class="small mt-2 fw-bold text-primary">กำลังติดต่อธนาคารผ่าน Thunder API...</p>
+                        <p class="small mt-2 fw-bold text-primary">กำลังตรวจสอบข้อมูลกับระบบธนาคาร...</p>
                     </div>
 
-                    <div id="statusUI" class="mt-3 d-none">
+                    <div id="statusUI" class="mt-4 d-none">
                         <span id="statusLabel" class="status-pill"></span>
                     </div>
                 </div>
 
                 <div class="col-md-7 border-start ps-md-4">
-                    <form id="ledgerForm" class="row g-3">
+                    <form id="accountingForm" class="row g-3">
                         <div class="col-md-7">
-                            <label class="form-label fw-bold">วันที่ธุรกรรม</label>
+                            <label class="form-label fw-bold">วันที่ธุรกรรม (Auto-Fill)</label>
                             <input type="date" id="dateInput" class="form-control data-input" readonly required>
                         </div>
                         <div class="col-md-5">
@@ -63,23 +63,20 @@
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-bold fs-5">จำนวนเงินยอดสุทธิ</label>
-                            <div class="input-group">
-                                <input type="number" id="amountInput" class="form-control data-input fs-4" readonly step="0.01">
-                                <span class="input-group-text">บาท</span>
-                            </div>
+                            <input type="number" id="amountInput" class="form-control data-input fs-4" readonly step="0.01">
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-bold">ผู้โอน (ข้อมูลจริงจากธนาคาร)</label>
+                            <label class="form-label fw-bold">ชื่อผู้โอน</label>
                             <input type="text" id="senderInput" class="form-control data-input" readonly>
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-bold text-muted">บันทึกช่วยจำ (Memo)</label>
-                            <textarea id="memoInput" class="form-control" rows="2" placeholder="ใส่ข้อมูลเพิ่มเติมสำหรับงานบัญชี..."></textarea>
+                            <textarea id="memoInput" class="form-control" rows="2" placeholder="ใส่รายละเอียดเพิ่มเติม..."></textarea>
                         </div>
                         
                         <div class="col-12 text-end pt-3">
-                            <button type="button" class="btn btn-link text-muted text-decoration-none" onclick="location.reload()">Reset</button>
-                            <button type="submit" id="saveBtn" class="btn btn-primary btn-lg px-5 shadow fw-bold" disabled>ยืนยันบันทึกบัญชี</button>
+                            <button type="button" class="btn btn-link text-muted text-decoration-none" onclick="location.reload()">ล้างข้อมูล</button>
+                            <button type="submit" id="saveBtn" class="btn btn-primary btn-lg px-5 shadow fw-bold" disabled>บันทึกลงบัญชี</button>
                         </div>
                     </form>
                 </div>
@@ -89,8 +86,8 @@
 
     <div class="table-container mb-5">
         <table class="table table-hover align-middle mb-0">
-            <thead class="table-dark">
-                <tr class="text-center">
+            <thead class="table-dark text-center">
+                <tr>
                     <th>วันที่/เวลา</th>
                     <th>ผู้โอน/บันทึก</th>
                     <th class="pe-4 text-end">ยอดเงิน</th>
@@ -102,9 +99,9 @@
 </div>
 
 <script>
-    // API KEY ของคุณ
+    const API_ENDPOINT = 'https://api.thunder.in.th/v2'; 
     const THUNDER_API_KEY = "44187dbd-e676-4c3a-bcf6-8cdf38622f3e";
-    let db = JSON.parse(localStorage.getItem('terra_v18')) || [];
+    let db = JSON.parse(localStorage.getItem('terra_v20')) || [];
 
     document.getElementById('fileInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -125,14 +122,13 @@
                 canvas.width = img.width;
                 canvas.height = img.height;
                 ctx.drawImage(img, 0, 0, img.width, img.height);
-                
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const code = jsQR(imageData.data, imageData.width, imageData.height);
                 
                 if (code) {
-                    await verifyWithThunder(code.data);
+                    await verifyWithThunderV2(code.data);
                 } else {
-                    updateStatus("❌ ไม่พบ QR Code ในภาพสลิป", "bg-danger text-white");
+                    updateStatus("❌ ไม่พบ QR Code ในสลิป", "bg-danger text-white");
                     document.getElementById('loader').style.display = 'none';
                 }
             };
@@ -141,43 +137,33 @@
         reader.readAsDataURL(file);
     });
 
-    async function verifyWithThunder(payload) {
+    async function verifyWithThunderV2(payload) {
         try {
-            console.log("กำลังส่งข้อมูลไปที่ Thunder API...");
-            const response = await fetch('https://api.thundersolution.net/v1/verify', {
+            const response = await fetch(API_ENDPOINT, {
                 method: 'POST',
-                mode: 'cors', // เพิ่มโหมด CORS เพื่อให้เรียกผ่าน GitHub ได้
                 headers: {
                     'Authorization': `Bearer ${THUNDER_API_KEY}`,
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ qrcode: payload })
             });
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP Error ${response.status}: ${errorText}`);
-            }
-
             const result = await response.json();
 
-            if (result.status === "success") {
+            if (response.ok && result.status === "success") {
                 const data = result.data;
                 document.getElementById('dateInput').value = data.date;
                 document.getElementById('timeInput').value = data.time || "--:--";
                 document.getElementById('amountInput').value = data.amount;
-                document.getElementById('senderInput').value = (data.sender.name || data.sender);
+                document.getElementById('senderInput').value = data.sender.name || data.sender;
                 
                 document.getElementById('saveBtn').disabled = false;
-                updateStatus("✅ ตรวจสอบข้อมูลจากธนาคารสำเร็จ", "bg-success text-white");
+                updateStatus("✅ ตรวจสอบข้อมูลสำเร็จ", "bg-success text-white");
             } else {
-                updateStatus("❌ API Response: " + result.message, "bg-danger text-white");
+                updateStatus(`❌ API Error: ${result.message || response.status}`, "bg-danger text-white");
             }
         } catch (err) {
-            console.error("Detailed Error:", err);
-            // แจ้งเตือนหากเกิดปัญหา Mixed Content หรือ CORS
-            updateStatus(`❌ เชื่อมต่อล้มเหลว: ${err.message}`, "bg-danger text-white");
+            updateStatus("❌ เชื่อมต่อล้มเหลว: ตรวจสอบ Internet", "bg-danger text-white");
         } finally {
             document.getElementById('loader').style.display = 'none';
         }
@@ -190,7 +176,7 @@
         document.getElementById('statusUI').classList.remove('d-none');
     }
 
-    document.getElementById('ledgerForm').onsubmit = (e) => {
+    document.getElementById('accountingForm').onsubmit = (e) => {
         e.preventDefault();
         const entry = {
             date: document.getElementById('dateInput').value,
@@ -200,8 +186,8 @@
             memo: document.getElementById('memoInput').value
         };
         db.push(entry);
-        localStorage.setItem('terra_v18', JSON.stringify(db));
-        alert("บันทึกข้อมูลเรียบร้อย!");
+        localStorage.setItem('terra_v20', JSON.stringify(db));
+        alert("บันทึกสำเร็จ!");
         location.reload();
     };
 
@@ -211,15 +197,13 @@
         db.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(item => {
             body.innerHTML += `
                 <tr>
-                    <td class="ps-4"><b>${item.date}</b><br><small class="text-muted">${item.time}</small></td>
-                    <td><small class="fw-bold">จาก:</small> ${item.sender}<br><small class="text-muted">${item.memo || '-'}</small></td>
-                    <td class="text-end pe-4 fw-bold text-primary">${parseFloat(item.amount).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+                    <td class="ps-4 text-center"><b>${item.date}</b><br><small class="text-muted">${item.time}</small></td>
+                    <td><small class="fw-bold text-primary">จาก:</small> ${item.sender}<br><small class="text-muted">${item.memo || '-'}</small></td>
+                    <td class="text-end pe-4 fw-bold text-dark">${parseFloat(item.amount).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
                 </tr>`;
         });
     }
-
     renderTable();
 </script>
-
 </body>
 </html>
