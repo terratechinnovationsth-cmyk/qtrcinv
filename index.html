@@ -8,49 +8,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Sarabun', sans-serif; background-color: #f4f7f6; font-size: 14px; display: flex; flex-direction: column; min-height: 100vh; }
-        
-        .main-header { 
-            background: linear-gradient(135deg, #198754 0%, #0d5d3b 100%); 
-            color: white; 
-            padding: 15px 0; 
-            border-bottom: 4px solid #ffc107; 
-        }
+        .main-header { background: linear-gradient(135deg, #198754 0%, #0d5d3b 100%); color: white; padding: 15px 0; border-bottom: 4px solid #ffc107; }
         .header-container { display: flex; align-items: center; justify-content: center; gap: 20px; }
         .logo-img { height: 60px; width: auto; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.2)); }
-        
-        .header-text-wrapper {
-            display: inline-flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        .main-company-name {
-            font-size: 2rem;
-            font-weight: bold;
-            margin-bottom: 0;
-            white-space: nowrap;
-        }
-        .header-subtitle { 
-            font-size: 1.05rem;
-            margin-bottom: 0;
-            opacity: 0.9;
-            font-weight: 400;
-            line-height: 1.2;
-            text-align: justify;
-            text-justify: inter-word;
-            width: 100%;
-            display: block;
-        }
-        
+        .header-text-wrapper { display: inline-flex; flex-direction: column; align-items: flex-start; }
+        .main-company-name { font-size: 2rem; font-weight: bold; margin-bottom: 0; white-space: nowrap; }
+        .header-subtitle { font-size: 1.05rem; margin-bottom: 0; opacity: 0.9; font-weight: 400; line-height: 1.2; text-align: justify; text-justify: inter-word; width: 100%; display: block; }
         .main-footer { background: #212529; color: #adb5bd; padding: 15px 0; margin-top: auto; text-align: center; font-size: 12px; }
-        
         .no-print-section { padding: 20px; background: white; border-bottom: 3px solid #dee2e6; }
         .history-section { background: #e9ecef; max-height: 600px; overflow-y: auto; padding: 15px; }
         .cust-db-panel { background: #f8f9fa; border: 1px dashed #ccc; padding: 15px; margin-bottom: 15px; display: none; }
         .thai-baht-live { background: #fff3cd; padding: 10px; border-radius: 5px; border: 1px solid #ffeeba; font-weight: bold; color: #856404; margin-top: 10px; }
-        
         .backup-panel { background: #f1f3f5; border-radius: 8px; padding: 10px 20px; margin-bottom: 15px; border-left: 5px solid #6c757d; }
-
-        /* Dashboard Styles */
         .dash-card { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-top: 4px solid #dee2e6; transition: transform 0.2s; }
         .dash-card:hover { transform: translateY(-3px); }
         .dash-qt { border-top-color: #6c757d; }
@@ -59,11 +28,9 @@
         .dash-title { font-size: 12px; color: #6c757d; font-weight: bold; text-transform: uppercase; }
         .dash-value { font-size: 18px; font-weight: bold; color: #212529; }
         .dash-count { font-size: 11px; color: #adb5bd; }
-
         .row-no { font-weight: bold; color: #495057; text-align: center; vertical-align: middle; background: #e9ecef !important; }
         .ver-badge { font-size: 10px; padding: 2px 6px; border-radius: 10px; background: #fd7e14; color: #fff; font-weight: bold; margin-left: 5px; }
         .time-label { font-size: 10px; color: #6c757d; display: block; }
-
         .preview-section { background: #cbd5e0; padding: 40px 0; min-height: 100vh; }
         .a4-page { width: 210mm; height: 296mm; margin: 0 auto; position: relative; background: #fff; box-shadow: 0 0 20px rgba(0,0,0,0.3); overflow: hidden; border: none; }
         .bg-template { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
@@ -73,35 +40,19 @@
         .f-client { top: 146px; left: 47px; width: 450px; }
         .item-container { position: absolute; top: 285px; left: 47px; width: 725px; z-index: 2; }
         .item-row-print { display: flex; font-size: 11px; margin-bottom: 4px; border-bottom: 0.5px solid #eee; }
-        
         .c-desc { width: 330px; } 
         .c-uprice { width: 145px; text-align: right; padding-right: 5px; } 
         .c-qty { width: 100px; text-align: right; } 
         .c-total { width: 130px; text-align: right; }
-
         .f-subtotal { bottom: 266px; left: 10px; width: 180px; text-align: right; }
         .f-discount { bottom: 266px; left: 180px; width: 185px; text-align: right; }
         .f-tax { bottom: 266px; left: 340px; width: 195px; text-align: right; }
         .f-grandtotal { bottom: 265px; right: 50px; width: 235px; text-align: right; color: #000; font-size: 15px; }
-
-        .f-baht-text { 
-            bottom: 238px; 
-            right: 50px;
-            max-width: 650px;
-            width: auto;
-            text-align: right;
-            font-size: 12px; 
-            font-style: italic; 
-            white-space: nowrap;
-        }
-
+        .f-baht-text { bottom: 238px; right: 50px; max-width: 650px; width: auto; text-align: right; font-size: 12px; font-style: italic; white-space: nowrap; }
         .f-terms-container { position: absolute; bottom: 130px; left: 410px; width: 725px; z-index: 2; display: flex; font-size: 10px; font-weight: normal; color: #333; }
         .term-col { width: 50%; }
-
         .f-bank-info { bottom: 141px; left: 123px; width: 300px; font-size: 11px; font-weight: normal; color: #000; line-height: 1.4; text-align: left; }
-
         #viewModeController { display: none; margin-bottom: 15px; background: #343a40; padding: 10px; border-radius: 50px; }
-
         @page { size: A4; margin: 0; }
         @media print { 
             html, body { width: 210mm; height: 297mm; margin: 0; padding: 0; background: #fff; -webkit-print-color-adjust: exact; }
@@ -342,15 +293,44 @@
 </footer>
 
 <script>
+    // --- ตั้งค่าฐานข้อมูล ---
     const DB_KEY = 'TTI_GLOBAL_HISTORY';
     const CUST_KEY = 'TTI_GLOBAL_CUSTOMERS';
     const BANK_KEY = 'TTI_GLOBAL_BANKS';
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyre1ObTYFGXxc9-42a0R2T6zcue4fLQChxV6eS2feyqr1ri4DZbD90ZLSMY2ID4R5oXg/exec"; // <--- สำคัญมาก: ใส่ Web App URL ที่นี่ครับ
+
     let currentViewingId = null;
 
     const UNIT_OPTIONS = `
         <option value="กิโลกรัม">กิโลกรัม</option><option value="กรัม">กรัม</option><option value="ตัน">ตัน</option><option value="ลิตร">ลิตร</option><option value="มิลลิลิตร">มิลลิลิตร</option><option value="ต้น">ต้น</option><option value="ชิ้น">ชิ้น</option><option value="ชุด">ชุด</option><option value="กล่อง">กล่อง</option>
     `;
 
+    // --- ส่วนเชื่อมต่อ Cloud ---
+    async function uploadToSheet(record) {
+        if (!SCRIPT_URL || SCRIPT_URL.includes("วานเอา_URL")) return;
+        try {
+            const subtotal = parseFloat(document.getElementById('liveSubtotal').innerText.replace(/,/g, '')) || 0;
+            const taxVal = parseFloat(document.getElementById('liveTax').innerText.replace(/,/g, '')) || 0;
+            
+            const dataToSheet = {
+                ...record,
+                subtotal: subtotal,
+                taxVal: taxVal,
+                taxR: document.getElementById('inTaxRate').value
+            };
+
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors", 
+                cache: "no-cache",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(dataToSheet)
+            });
+            console.log("Cloud Sync Triggered");
+        } catch (err) { console.error("Cloud Sync Error:", err); }
+    }
+
+    // --- จัดการข้อมูลหลัก ---
     function exportData() {
         const data = { history: JSON.parse(localStorage.getItem(DB_KEY) || '[]'), customers: JSON.parse(localStorage.getItem(CUST_KEY) || '[]'), banks: JSON.parse(localStorage.getItem(BANK_KEY) || '[]') };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -382,6 +362,7 @@
     let customers = getStoredData(CUST_KEY);
     let banks = getStoredData(BANK_KEY);
 
+    // --- จัดการธนาคาร ---
     function saveBankToDb() {
         const bName = document.getElementById('bankName').value.trim(); const bAcc = document.getElementById('bankAccName').value.trim();
         const bNo = document.getElementById('bankNo').value.trim(); const bType = document.getElementById('bankType').value.trim();
@@ -399,36 +380,20 @@
         document.getElementById('bankNo').value = b.no; document.getElementById('bankType').value = b.type;
         updatePreview();
     }
-// ฟังก์ชันสำหรับลบธนาคารที่เลือกอยู่
-function deleteBankFromDb() {
-    const select = document.getElementById('bankSelect');
-    const idx = select.value; // ดึงลำดับ (Index) ที่เลือกอยู่ใน Dropdown
-
-    if (idx === "") {
-        alert("กรุณาเลือกบัญชีธนาคารที่ต้องการลบจากรายการก่อนครับ");
-        return;
+    function deleteBankFromDb() {
+        const select = document.getElementById('bankSelect');
+        const idx = select.value;
+        if (idx === "") return alert("กรุณาเลือกบัญชีที่ต้องการลบ");
+        if (confirm("ต้องการลบข้อมูลบัญชีนี้?")) {
+            banks.splice(idx, 1);
+            localStorage.setItem(BANK_KEY, JSON.stringify(banks));
+            updateBankDropdown();
+            document.getElementById('bankName').value = ""; document.getElementById('bankAccName').value = ""; document.getElementById('bankNo').value = ""; document.getElementById('bankType').value = "";
+            alert("ลบเรียบร้อย"); updatePreview();
+        }
     }
 
-    if (confirm("คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลบัญชีธนาคารนี้?")) {
-        // 1. ลบข้อมูลออกจากตัวแปร banks (ที่เป็น Array)
-        banks.splice(idx, 1);
-        
-        // 2. บันทึกข้อมูลที่เหลือกลับลงไปใน localStorage
-        localStorage.setItem(BANK_KEY, JSON.stringify(banks));
-        
-        // 3. อัพเดท Dropdown บนหน้าจอให้เป็นปัจจุบัน
-        updateBankDropdown();
-        
-        // 4. ล้างช่องกรอกข้อมูลให้ว่าง
-        document.getElementById('bankName').value = "";
-        document.getElementById('bankAccName').value = "";
-        document.getElementById('bankNo').value = "";
-        document.getElementById('bankType').value = "";
-        
-        alert("ลบข้อมูลเรียบร้อยแล้ว");
-        updatePreview(); // อัพเดทตัวอย่างใบเสร็จด้วย
-    }
-}
+    // --- จัดการลูกค้า ---
     function toggleCustPanel() { const p = document.getElementById('custDbPanel'); p.style.display = (p.style.display === 'block') ? 'none' : 'block'; }
     function saveCustomer() {
         const name = document.getElementById('dbCustName').value.trim(); const addr = document.getElementById('dbCustAddr').value.trim(); 
@@ -448,66 +413,31 @@ function deleteBankFromDb() {
         updatePreview();
     }
 
+    // --- ระบบคำนวณเงิน ---
     function ThaiBaht(Number) {
-    Number = Number.toString().replace(/,/g, ""); 
-    Number = parseFloat(Number); 
-    if (isNaN(Number)) return "";
-    if (Number == 0) return "ศูนย์บาทถ้วน";
-    
-    var strNumber = Number.toFixed(2).split("."); 
-    var Baht = strNumber[0], Satang = strNumber[1];
-    
-    function Convert(Amount) {
-        const ThaiNumber = ["ศูนย์", "หนึ่ง", "สอง", "สาม", "สี่", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
-        const ThaiUnit = ["", "สิบ", "ร้อย", "พัน", "หมื่น", "แสน", "ล้าน"];
-        var Text = "";
-        var Len = Amount.length;
-        
-        for (var i = 0; i < Len; i++) {
-            var n = Amount.substr(i, 1);
-            var pos = Len - i - 1; // ตำแหน่งหลักนับจากขวา (เริ่มที่ 0)
-            
-            if (n != "0") {
-                // จัดการหลักหน่วย (ต้องดูว่าเป็น "เอ็ด" หรือไม่)
-                if ((pos % 6) == 0 && n == "1" && Len > 1 && (Amount.substr(i - 1, 1) != "0")) {
-                    Text += "เอ็ด";
+        Number = Number.toString().replace(/,/g, ""); 
+        Number = parseFloat(Number); if (isNaN(Number)) return ""; if (Number == 0) return "ศูนย์บาทถ้วน";
+        var strNumber = Number.toFixed(2).split("."); var Baht = strNumber[0], Satang = strNumber[1];
+        function Convert(Amount) {
+            const ThaiNumber = ["ศูนย์", "หนึ่ง", "สอง", "สาม", "สี่", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
+            const ThaiUnit = ["", "สิบ", "ร้อย", "พัน", "หมื่น", "แสน", "ล้าน"];
+            var Text = ""; var Len = Amount.length;
+            for (var i = 0; i < Len; i++) {
+                var n = Amount.substr(i, 1); var pos = Len - i - 1;
+                if (n != "0") {
+                    if ((pos % 6) == 0 && n == "1" && Len > 1 && (Amount.substr(i - 1, 1) != "0")) Text += "เอ็ด";
+                    else if ((pos % 6) == 1 && n == "2") Text += "ยี่สิบ";
+                    else if ((pos % 6) == 1 && n == "1") Text += "สิบ";
+                    else Text += ThaiNumber[n] + ThaiUnit[pos % 6];
                 }
-                // จัดการหลักสิบ (ต้องดูว่าเป็น "ยี่" หรือ "สิบ" เฉยๆ)
-                else if ((pos % 6) == 1 && n == "2") {
-                    Text += "ยี่สิบ";
-                }
-                else if ((pos % 6) == 1 && n == "1") {
-                    Text += "สิบ";
-                }
-                // หลักอื่นๆ ทั่วไป
-                else {
-                    Text += ThaiNumber[n] + ThaiUnit[pos % 6];
-                }
-            }
-            
-            // เติมคำว่า "ล้าน" ทุกๆ 6 หลัก (ถ้าไม่ใช่หลักสุดท้ายของตัวเลข)
-            if (pos > 0 && (pos % 6) == 0) {
-                Text += "ล้าน";
-            }
+                if (pos > 0 && (pos % 6) == 0) Text += "ล้าน";
+            } return Text;
         }
-        return Text;
+        var res = Convert(Baht) + "บาท"; if (Satang == "00") res += "ถ้วน"; else res += Convert(Satang) + "สตางค์"; return res;
     }
-    
-    var res = Convert(Baht) + "บาท"; 
-    if (Satang == "00") res += "ถ้วน"; 
-    else res += Convert(Satang) + "สตางค์"; 
-    return res;
-}
 
-    function updateRowNumbers() {
-        const rows = document.querySelectorAll('#itemRows tr');
-        rows.forEach((row, index) => { row.querySelector('.row-no').innerText = index + 1; });
-    }
-    function syncUnit(rowElement) {
-        const unitDropdown = rowElement.querySelector('.in-unit-label');
-        const unitTotalDropdown = rowElement.querySelector('.in-unit');
-        unitTotalDropdown.value = unitDropdown.value; updatePreview();
-    }
+    function updateRowNumbers() { const rows = document.querySelectorAll('#itemRows tr'); rows.forEach((row, index) => { row.querySelector('.row-no').innerText = index + 1; }); }
+    function syncUnit(rowElement) { const unitDropdown = rowElement.querySelector('.in-unit-label'); const unitTotalDropdown = rowElement.querySelector('.in-unit'); unitTotalDropdown.value = unitDropdown.value; updatePreview(); }
     function addRow() {
         const tr = document.createElement('tr');
         tr.innerHTML = `<td class="row-no"></td><td><input type="text" class="form-control form-control-sm in-item" oninput="updatePreview()"></td><td><div class="input-group input-group-sm"><input type="number" class="form-control in-price" placeholder="ราคา" oninput="updatePreview()"><span class="input-group-text small">/</span><select class="form-select in-unit-label" onchange="syncUnit(this.closest('tr'))">${UNIT_OPTIONS}</select></div></td><td><input type="number" class="form-control form-control-sm in-qty" oninput="updatePreview()"></td><td><select class="form-select form-select-sm in-unit" onchange="updatePreview()">${UNIT_OPTIONS}</select></td><td class="text-end px-2 pt-2 fw-bold"><span class="line-total-val">0.00</span> บาท</td><td class="text-center"><button class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove(); updateRowNumbers(); updatePreview();">×</button></td>`;
@@ -559,6 +489,7 @@ function deleteBankFromDb() {
         document.getElementById('outTerms').innerHTML = `<div class="term-col">${t1}</div><div class="term-col">${t2}</div>`;
     }
 
+    // --- จัดการการส่ง/บันทึก ---
     function sendToCustomerEmail() {
         const clientEmail = document.getElementById('custEmail').value.trim(); const clientName = document.getElementById('custName').value.trim();
         const docNo = document.getElementById('inNo').value.trim(); const docType = document.getElementById('docType').options[document.getElementById('docType').selectedIndex].text;
@@ -574,11 +505,32 @@ function deleteBankFromDb() {
         for(let i=0; i<itemEls.length; i++) { if(itemEls[i].value) items.push({ name: itemEls[i].value, price: document.getElementsByClassName('in-price')[i].value, unitLabel: document.getElementsByClassName('in-unit-label')[i].value, qty: document.getElementsByClassName('in-qty')[i].value, unit: document.getElementsByClassName('in-unit')[i].value }); }
         const terms = Array.from(document.querySelectorAll('.term-input')).map(inp => inp.value);
         const now = new Date(); const timestamp = now.toLocaleDateString('th-TH') + ' ' + now.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
-        const record = { id: Date.now(), timestamp, date: document.getElementById('inDate').value, no: document.getElementById('inNo').value, custName: document.getElementById('custName').value, custAddr: document.getElementById('custAddr').value, custEmail: document.getElementById('custEmail').value, custTax: document.getElementById('custTax').value, disc: document.getElementById('inDiscount').value, taxR: document.getElementById('inTaxRate').value, type: document.getElementById('docType').value, items, terms, bank: { name: document.getElementById('bankName').value, acc: document.getElementById('bankAccName').value, type: document.getElementById('bankType').value, no: document.getElementById('bankNo').value }, total: document.getElementById('liveTotal').innerText + " บาท", isEdit: editRef !== "" };
-        db.push(record); localStorage.setItem(DB_KEY, JSON.stringify(db)); renderHistory(); alert("บันทึกเรียบร้อย"); resetForm();
+        
+        const record = { 
+            id: Date.now(), 
+            timestamp, 
+            date: document.getElementById('inDate').value, 
+            no: document.getElementById('inNo').value, 
+            custName: document.getElementById('custName').value, 
+            custAddr: document.getElementById('custAddr').value, 
+            custEmail: document.getElementById('custEmail').value, 
+            custTax: document.getElementById('custTax').value, 
+            disc: document.getElementById('inDiscount').value, 
+            taxR: document.getElementById('inTaxRate').value, 
+            type: document.getElementById('docType').value, 
+            items, 
+            terms, 
+            bank: { name: document.getElementById('bankName').value, acc: document.getElementById('bankAccName').value, type: document.getElementById('bankType').value, no: document.getElementById('bankNo').value }, 
+            total: document.getElementById('liveTotal').innerText + " บาท", 
+            isEdit: editRef !== "" 
+        };
+        
+        db.push(record); localStorage.setItem(DB_KEY, JSON.stringify(db)); 
+        uploadToSheet(record); // <--- ส่งไป Google Sheets
+        renderHistory(); alert("บันทึกเรียบร้อย"); resetForm();
     }
 
-    // --- ระบบ Dashboard Calculation ---
+    // --- Dashboard & History ---
     function updateDashboard(filteredData) {
         let qtTotal = 0, invTotal = 0, rcTotal = 0;
         let qtCount = 0, invCount = 0, rcCount = 0;
@@ -614,8 +566,7 @@ function deleteBankFromDb() {
                 default: return b.id - a.id;
             }
         });
-        updateDashboard(filtered); // อัปเดต Dashboard ตามผลการกรอง
-        renderHistoryList(filtered);
+        updateDashboard(filtered); renderHistoryList(filtered);
     }
 
     function showAllHistory() { document.getElementById('historySearch').value = ""; document.getElementById('filterDocType').value = "all"; document.getElementById('historySort').value = "timeDesc"; renderHistory(); }
@@ -626,6 +577,7 @@ function deleteBankFromDb() {
     function renderHistory() { filterHistory(); }
     function deleteRecord(id) { if(confirm("ลบรายการนี้ใช่หรือไม่?")) { db = db.filter(x => x.id !== id); localStorage.setItem(DB_KEY, JSON.stringify(db)); renderHistory(); } }
 
+    // --- ระบบเรียกดูประวัติ ---
     function viewRecordById(id) {
         currentViewingId = id; const r = db.find(x => x.id === id); if(!r) return;
         document.getElementById('viewModeController').style.display = 'flex';
@@ -679,6 +631,4 @@ function deleteBankFromDb() {
     };
 </script>
 </body>
-
 </html>
-
