@@ -603,6 +603,8 @@ function deleteBankFromDb() {
     function saveData() {
     const editRef = document.getElementById('editRefNo').value;
     const itemEls = document.getElementsByClassName('in-item'), items = [];
+    
+    // ดึงข้อมูลสินค้าจากตาราง
     for(let i=0; i<itemEls.length; i++) { 
         if(itemEls[i].value) items.push({ 
             name: itemEls[i].value, 
@@ -612,6 +614,70 @@ function deleteBankFromDb() {
             unit: document.getElementsByClassName('in-unit')[i].value 
         }); 
     }
+
+    const terms = Array.from(document.querySelectorAll('.term-input')).map(inp => inp.value);
+    
+    // สำคัญ: ต้องสร้าง Object ให้มีชื่อตัวแปรตรงกับที่ Backend (gs) รอรับ
+    const record = { 
+        id: Date.now(), 
+        timestamp: new Date().toLocaleString('th-TH'), 
+        date: document.getElementById('inDate').value, 
+        no: document.getElementById('inNo').value, 
+        custName: document.getElementById('custName').value, 
+        custAddr: document.getElementById('custAddr').value, 
+        custEmail: document.getElementById('custEmail').value, 
+        custTax: document.getElementById('custTax').value, 
+        // ตัวเลขสำหรับการคำนวณใน Google Sheet
+        subtotal: parseFloat(document.getElementById('liveSubtotal').innerText.replace(/,/g, '')) || 0,
+        disc: parseFloat(document.getElementById('inDiscount').value || 0),
+        taxR: document.getElementById('inTaxRate').value,
+        taxVal: parseFloat(document.getElementById('liveTax').innerText.replace(/,/g, '')) || 0,
+        type: document.getElementById('docType').value, 
+        items: items, 
+        terms: terms, 
+        bank: { 
+            name: document.getElementById('bankName').value, 
+            acc: document.getElementById('bankAccName').value, 
+            type: document.getElementById('bankType').value, // **เพิ่มบรรทัดนี้เพื่อส่งข้อมูล Bank Type**
+            no: document.getElementById('bankNo').value 
+        }, 
+        total: document.getElementById('liveTotal').innerText + " บาท", 
+        isEdit: editRef !== "" 
+    };
+
+    // 1. บันทึกลง LocalStorage (เพื่อให้ตารางประวัติข้างล่างอัปเดตทันที)
+    db.push(record); 
+    localStorage.setItem(DB_KEY, JSON.stringify(db)); 
+    renderHistory(); 
+
+    // 2. เรียกฟังก์ชันส่งข้อมูลไป Google Sheets (จุดที่เราเชื่อมต่อไปยังข้อที่ 3)
+    uploadToSheet(record); 
+
+    alert("บันทึกข้อมูลเรียบร้อยและสำรองไปยัง Google Sheets แล้ว"); 
+    resetForm();
+}
+    // เปลี่ยน URL ตรงนี้เป็น URL ที่ได้จากการ Deploy ใหม่ล่าสุดเสมอ
+const SCRIPT_URL = "ใส่_WEB_APP_URL_ที่ได้จาก_APPS_SCRIPT_ตรงนี้"; 
+
+async function uploadToSheet(record) {
+    try {
+        // ใช้ fetch เพื่อส่งข้อมูลไปยัง Google Apps Script
+        const response = await fetch(SCRIPT_URL, {
+            method: "POST",
+            // การเอา mode: "no-cors" ออก จะช่วยให้ตรวจสอบ Error ได้ดีขึ้น 
+            // แต่ถ้าติดปัญหาเรื่องความปลอดภัยค่อยใส่กลับเข้าไป
+            headers: {
+                "Content-Type": "text/plain;charset=utf-8",
+            },
+            body: JSON.stringify(record)
+        });
+        
+        console.log("Cloud Sync: Success");
+    } catch (err) {
+        console.error("Cloud Sync: Error", err);
+        // หากส่งไม่สำเร็จ ระบบจะแจ้งเตือนใน Console (กด F12 เพื่อดู)
+    }
+}
     const terms = Array.from(document.querySelectorAll('.term-input')).map(inp => inp.value);
     const now = new Date(); 
     const timestamp = now.toLocaleDateString('th-TH') + ' ' + now.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
@@ -754,6 +820,7 @@ function deleteBankFromDb() {
 </body>
 
 </html>
+
 
 
 
