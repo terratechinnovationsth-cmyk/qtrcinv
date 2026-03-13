@@ -26,16 +26,13 @@
         .dash-value { font-size: 18px; font-weight: bold; color: #212529; }
         .dash-count { font-size: 11px; color: #adb5bd; }
         .row-no { font-weight: bold; color: #495057; text-align: center; vertical-align: middle; background: #e9ecef !important; }
-        .ver-badge { font-size: 10px; padding: 2px 6px; border-radius: 10px; background: #fd7e14; color: #fff; font-weight: bold; margin-left: 5px; }
-        .time-label { font-size: 10px; color: #6c757d; display: block; }
         
-        /* --- ใช้โครงสร้าง CSS พรีวิวจากไฟล์ที่อัปโหลด (ไม่มีเส้นกรอบ) --- */
+        /* สไตล์พรีวิวจาก Backup (ไม่มีเส้นกรอบ) */
         .preview-section { background: #cbd5e0; padding: 40px 0; min-height: 100vh; }
         .a4-page { width: 210mm; height: 296mm; margin: 0 auto; position: relative; background: #fff; box-shadow: 0 0 20px rgba(0,0,0,0.3); overflow: hidden; border: none; }
         .bg-template { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
         .data-field { position: absolute; z-index: 2; font-weight: bold; color: #000; }
-        .f-date { top: 95px; left: 107px; }
-        .f-no { top: 112px; left: 120px; }
+        .f-date { top: 95px; left: 107px; } .f-no { top: 112px; left: 120px; }
         .f-client { top: 146px; left: 47px; width: 450px; }
         .item-container { position: absolute; top: 285px; left: 47px; width: 725px; z-index: 2; }
         .item-row-print { display: flex; font-size: 11px; margin-bottom: 4px; border-bottom: 0.5px solid #eee; }
@@ -89,8 +86,6 @@
         </div>
 
         <h5 class="text-success fw-bold">1. จัดการข้อมูลลูกค้าและรายละเอียดสินค้า</h5>
-        <input type="hidden" id="editRefNo" value=""> 
-
         <div class="row g-2 mb-3">
             <div class="col-md-2"><label class="small fw-bold">ประเภทเอกสาร</label>
                 <select id="docType" class="form-select form-select-sm" onchange="updatePreview()">
@@ -102,7 +97,6 @@
             <div class="col-md-2"><label class="small">วันที่</label><input type="text" id="inDate" class="form-control form-control-sm" oninput="updatePreview()"></div>
             <div class="col-md-2"><label class="small">เลขที่เอกสาร</label><input type="text" id="inNo" class="form-control form-control-sm" oninput="updatePreview()"></div>
             <div class="col-md-6 d-flex align-items-end gap-2">
-                <button class="btn btn-danger btn-sm w-100" onclick="sendToCustomerEmail()">📧 ส่งอีเมลลูกค้า</button>
                 <button class="btn btn-primary btn-sm w-100" onclick="window.print()">🖨️ พิมพ์</button>
                 <button class="btn btn-outline-secondary btn-sm" onclick="resetForm()">ล้างฟอร์ม</button>
             </div>
@@ -118,7 +112,7 @@
                 <input type="text" id="custName" class="form-control form-control-sm" placeholder="ชื่อลูกค้าใหม่" oninput="updatePreview()">
             </div>
             <div class="col-md-4"><label class="small">ที่อยู่</label><input type="text" id="custAddr" class="form-control form-control-sm" oninput="updatePreview()"></div>
-            <div class="col-md-2"><label class="small">อีเมลลูกค้า</label><input type="email" id="custEmail" class="form-control form-control-sm" oninput="updatePreview()"></div>
+            <div class="col-md-2"><label class="small">อีเมล</label><input type="email" id="custEmail" class="form-control form-control-sm"></div>
             <div class="col-md-2"><label class="small">เลขผู้เสียภาษี</label><input type="text" id="custTax" class="form-control form-control-sm" oninput="updatePreview()"></div>
             <div class="col-md-1 d-flex align-items-end">
                 <button class="btn btn-primary btn-sm w-100 fw-bold" onclick="saveCustomerFull()">➕ บันทึก</button>
@@ -190,7 +184,6 @@
             <div class="col-md-3"><h6 class="text-secondary fw-bold mb-0">2. ประวัติรายการ</h6></div>
             <div class="col-md-9 d-flex flex-wrap gap-2 justify-content-end">
                 <input type="text" id="historySearch" class="form-control form-control-sm border-success shadow-sm" style="width: 200px;" placeholder="🔍 ค้นหา..." oninput="renderHistory()">
-                <button class="btn btn-success btn-sm text-nowrap" onclick="showAllHistory()">แสดงทั้งหมด</button>
             </div>
         </div>
         <div class="table-responsive">
@@ -346,26 +339,36 @@
         document.getElementById('outCustName').innerText = document.getElementById('custName').value;
         document.getElementById('outCustAddr').innerText = document.getElementById('custAddr').value;
         document.getElementById('outCustTax').innerText = document.getElementById('custTax').value ? "เลขประจำตัวผู้เสียภาษี " + document.getElementById('custTax').value : "";
+        
         let sub = 0, html = '';
         const items = document.getElementsByClassName('in-item'), prices = document.getElementsByClassName('in-price'), qtys = document.getElementsByClassName('in-qty'), units = document.getElementsByClassName('in-unit'), labels = document.getElementsByClassName('in-unit-label'), lTotal = document.getElementsByClassName('line-total-val');
+        
         for(let i=0; i<items.length; i++) {
             let p = parseFloat(prices[i].value || 0), q = parseFloat(qtys[i].value || 0), total = p * q;
-            sub += total; lTotal[i].innerText = total.toLocaleString(undefined, {minimumFractionDigits:2});
-            if(items[i].value || p > 0) html += `<div class="item-row-print"><div class="c-desc">${i+1}. ${items[i].value}</div><div class="c-uprice">${p.toLocaleString()} /${labels[i].value}</div><div class="c-qty">${q} ${units[i].value}</div><div class="c-total">${total.toLocaleString(undefined,{minimumFractionDigits:2})} บาท</div></div>`;
+            sub += total; 
+            lTotal[i].innerText = total.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+            if(items[i].value || p > 0) {
+                html += `<div class="item-row-print"><div class="c-desc">${i+1}. ${items[i].value}</div><div class="c-uprice">${p.toLocaleString()} /${labels[i].value}</div><div class="c-qty">${q} ${units[i].value}</div><div class="c-total">${total.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})} บาท</div></div>`;
+            }
         }
+        
         const disc = parseFloat(document.getElementById('inDiscount').value || 0), tRate = parseFloat(document.getElementById('inTaxRate').value || 7);
         const tax = (sub - disc) * (tRate / 100), total = sub - disc + tax;
-        document.getElementById('liveSubtotal').innerText = sub.toLocaleString(undefined,{minimumFractionDigits:2});
-        document.getElementById('liveDiscountDisplay').innerText = disc.toLocaleString(undefined,{minimumFractionDigits:2});
-        document.getElementById('liveTax').innerText = tax.toLocaleString(undefined,{minimumFractionDigits:2});
-        document.getElementById('liveTotal').innerText = total.toLocaleString(undefined,{minimumFractionDigits:2});
+        
+        // แก้ไขส่วนการแสดงผลตัวเลข Subtotal และ Live Display ให้ถูกต้องแม่นยำ
+        document.getElementById('liveSubtotal').innerText = sub.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+        document.getElementById('liveDiscountDisplay').innerText = disc.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+        document.getElementById('liveTax').innerText = tax.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+        document.getElementById('liveTotal').innerText = total.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
         document.getElementById('liveThaiBaht').innerText = "ตัวอักษร: (" + ThaiBaht(total) + ")";
+        
         document.getElementById('outItemList').innerHTML = html;
-        document.getElementById('outSubtotal').innerText = sub.toLocaleString() + " บาท";
-        document.getElementById('outDiscount').innerText = disc.toLocaleString() + " บาท";
-        document.getElementById('outTax').innerText = tax.toLocaleString() + " บาท";
-        document.getElementById('outTotal').innerText = total.toLocaleString() + " บาท";
+        document.getElementById('outSubtotal').innerText = sub.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
+        document.getElementById('outDiscount').innerText = disc.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
+        document.getElementById('outTax').innerText = tax.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
+        document.getElementById('outTotal').innerText = total.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
         document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(total) + ")";
+
         const bk = { name: document.getElementById('bankName').value, acc: document.getElementById('bankAccName').value, type: document.getElementById('bankType').value, no: document.getElementById('bankNo').value };
         document.getElementById('outBankInfo').innerHTML = `${bk.name}<br>${bk.acc}<br>${bk.type}<br>${bk.no}`;
         const terms = document.querySelectorAll('.term-input');
@@ -418,10 +421,12 @@
         document.getElementById('outCustName').innerText = r.custName; document.getElementById('outCustAddr').innerText = r.custAddr;
         document.getElementById('outCustTax').innerText = r.custTax ? "เลขประจำตัวผู้เสียภาษี " + r.custTax : "";
         let html = '';
-        r.items.forEach((it, i) => { const l = parseFloat(it.price) * parseFloat(it.qty); html += `<div class="item-row-print"><div class="c-desc">${i+1}. ${it.name}</div><div class="c-uprice">${parseFloat(it.price).toLocaleString()} /${it.unitLabel}</div><div class="c-qty">${it.qty} ${it.unit}</div><div class="c-total">${l.toLocaleString(undefined,{minimumFractionDigits:2})} บาท</div></div>`; });
+        r.items.forEach((it, i) => { const l = parseFloat(it.price) * parseFloat(it.qty); html += `<div class="item-row-print"><div class="c-desc">${i+1}. ${it.name}</div><div class="c-uprice">${parseFloat(it.price).toLocaleString()} /${it.unitLabel}</div><div class="c-qty">${it.qty} ${it.unit}</div><div class="c-total">${l.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})} บาท</div></div>`; });
         document.getElementById('outItemList').innerHTML = html;
-        document.getElementById('outSubtotal').innerText = (parseFloat(r.subtotal)||0).toLocaleString() + " บาท"; document.getElementById('outDiscount').innerText = (parseFloat(r.disc)||0).toLocaleString() + " บาท";
-        document.getElementById('outTax').innerText = (parseFloat(r.taxVal)||0).toLocaleString() + " บาท"; document.getElementById('outTotal').innerText = r.total;
+        document.getElementById('outSubtotal').innerText = (parseFloat(r.subtotal)||0).toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท"; 
+        document.getElementById('outDiscount').innerText = (parseFloat(r.disc)||0).toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
+        document.getElementById('outTax').innerText = (parseFloat(r.taxVal)||0).toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท"; 
+        document.getElementById('outTotal').innerText = r.total;
         document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(r.total) + ")";
         const bk = r.bank || {};
         document.getElementById('outBankInfo').innerHTML = `${bk.name}<br>${bk.acc}<br>${bk.type}<br>${bk.no}`;
