@@ -29,21 +29,21 @@
         .ver-badge { font-size: 10px; padding: 2px 6px; border-radius: 10px; background: #fd7e14; color: #fff; font-weight: bold; margin-left: 5px; }
         .time-label { font-size: 10px; color: #6c757d; display: block; }
         
-        /* ปรับปรุง CSS เพื่อนำเส้นขอบดำออก */
-        .preview-section { background: #cbd5e0; padding: 40px 0; min-height: 100vh; }
+        /* Preview & Print Section - กำจัดเส้นขอบดำอย่างเด็ดขาด */
+        .preview-section { background: #cbd5e0; padding: 40px 0; min-height: 100vh; border: none !important; }
         .a4-page { 
             width: 210mm; 
             height: 297mm; 
             margin: 0 auto; 
             position: relative; 
             background: #fff; 
-            box-shadow: 0 0 20px rgba(0,0,0,0.3); 
+            box-shadow: none !important; /* ลบเงารอบกระดาษ */
             overflow: hidden; 
-            border: none !important; /* บังคับไม่มีเส้นขอบ */
+            border: none !important; /* ลบเส้นขอบดำรอบนอก */
+            outline: none !important; /* ลบเส้น Focus */
             display: block;
-            outline: none !important; /* ป้องกันเส้น Focus */
         }
-        .bg-template { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; border: none !important; }
+        .bg-template { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; border: none !important; outline: none !important; }
         .data-field { position: absolute; z-index: 2; font-weight: bold; color: #000; }
         .f-date { top: 95px; left: 107px; } .f-no { top: 112px; left: 120px; }
         .f-client { top: 146px; left: 47px; width: 450px; }
@@ -61,12 +61,13 @@
 
         @page { size: A4; margin: 0; }
         @media print { 
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; border-color: transparent !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; border: none !important; outline: none !important; box-shadow: none !important; }
             html, body { width: 210mm; height: 297mm; margin: 0 !important; padding: 0 !important; overflow: hidden !important; background: #fff; }
             .no-print, .main-header, .main-footer, .no-print-section, .history-section, .preview-section > *:not(.a4-page) { display: none !important; } 
             .preview-section { padding: 0 !important; margin: 0 !important; background: none !important; overflow: hidden !important; width: 210mm; height: 297mm; border: none !important; } 
             .a4-page { 
                 margin: 0 !important; 
+                padding: 0 !important;
                 box-shadow: none !important; 
                 border: none !important; 
                 outline: none !important;
@@ -352,7 +353,7 @@
             for (var i = 0; i < L; i++) {
                 var x = A.substr(i, 1); var p = L - i - 1;
                 if (x != "0") {
-                    if ((p % 6) == 0 && x == "1" && L > 1 && (A.substr(i - 1, 1) != "0")) R += "เอ็ด";
+                    if ((p % 6) == 0 && x == "1" && L > 1 && (A.substr(i - i, 1) != "0")) R += "เอ็ด";
                     else if ((p % 6) == 1 && x == "2") R += "ยี่สิบ";
                     else if ((p % 6) == 1 && x == "1") R += "สิบ";
                     else R += TN[x] + TU[p % 6];
@@ -391,7 +392,6 @@
         document.getElementById('outTax').innerText = tax.toLocaleString() + " บาท";
         document.getElementById('outTotal').innerText = total.toLocaleString() + " บาท";
         document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(total) + ")";
-        
         const bk = { name: document.getElementById('bankName').value, acc: document.getElementById('bankAccName').value, type: document.getElementById('bankType').value, no: document.getElementById('bankNo').value };
         document.getElementById('outBankInfo').innerHTML = `${bk.name}<br>${bk.acc}<br>${bk.type}<br>${bk.no}`;
         const terms = document.querySelectorAll('.term-input');
@@ -446,10 +446,8 @@
         let html = '';
         r.items.forEach((it, i) => { const l = parseFloat(it.price) * parseFloat(it.qty); html += `<div class="item-row-print"><div class="c-desc">${i+1}. ${it.name}</div><div class="c-uprice">${parseFloat(it.price).toLocaleString()} /${it.unitLabel}</div><div class="c-qty">${it.qty} ${it.unit}</div><div class="c-total">${l.toLocaleString(undefined,{minimumFractionDigits:2})} บาท</div></div>`; });
         document.getElementById('outItemList').innerHTML = html;
-        document.getElementById('outSubtotal').innerText = (parseFloat(r.subtotal)||0).toLocaleString() + " บาท"; 
-        document.getElementById('outDiscount').innerText = (parseFloat(r.disc)||0).toLocaleString() + " บาท";
-        document.getElementById('outTax').innerText = (parseFloat(r.taxVal)||0).toLocaleString() + " บาท"; 
-        document.getElementById('outTotal').innerText = r.total;
+        document.getElementById('outSubtotal').innerText = (parseFloat(r.subtotal)||0).toLocaleString() + " บาท"; document.getElementById('outDiscount').innerText = (parseFloat(r.disc)||0).toLocaleString() + " บาท";
+        document.getElementById('outTax').innerText = (parseFloat(r.taxVal)||0).toLocaleString() + " บาท"; document.getElementById('outTotal').innerText = r.total;
         document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(r.total) + ")";
         const bk = r.bank || {};
         document.getElementById('outBankInfo').innerHTML = `${bk.name}<br>${bk.acc}<br>${bk.type}<br>${bk.no}`;
