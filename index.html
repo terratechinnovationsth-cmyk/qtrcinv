@@ -404,7 +404,6 @@
         let rawCustName = document.getElementById('custName').value;
         const editId = document.getElementById('editingRecordId').value;
         
-        // สถานะการแก้ไข: เก็บเป็น Boolean ในข้อมูล
         let isEdited = false;
         if (editId) {
             isEdited = true;
@@ -414,8 +413,8 @@
             id: editId ? parseInt(editId) : Date.now(), 
             timestamp: new Date().toLocaleString('th-TH'),
             no: document.getElementById('inNo').value, date: document.getElementById('inDate').value,
-            custName: rawCustName, // เก็บชื่อดิบเพื่อนำไปแสดงผลในเอกสาร
-            isEdited: isEdited,    // เก็บสถานะว่ามีการแก้ไข
+            custName: rawCustName, 
+            isEdited: isEdited,    
             custAddr: document.getElementById('custAddr').value, custEmail: document.getElementById('custEmail').value, custTax: document.getElementById('custTax').value,
             bank: { name: document.getElementById('bankName').value, acc: document.getElementById('bankAccName').value, type: document.getElementById('bankType').value, no: document.getElementById('bankNo').value },
             items, terms: Array.from(document.querySelectorAll('.term-input')).map(t => t.value),
@@ -437,7 +436,6 @@
         const body = document.getElementById('historyTableBody');
         
         body.innerHTML = filtered.slice().reverse().map(r => {
-            // ส่วนที่ปรับปรุง: แสดงคำว่า (แก้ไข) ตัวสีแดงเฉพาะในตารางประวัติเท่านั้น
             let displayCustName = r.custName;
             if (r.isEdited) {
                 displayCustName += ` <span style="color: red; font-weight: bold;">(แก้ไข)</span>`;
@@ -473,7 +471,6 @@
     function renderA4Data(r, type) {
         document.getElementById('viewTemplate').src = type;
         document.getElementById('outDate').innerText = r.date; document.getElementById('outNo').innerText = r.no;
-        // ในหน้าเอกสารพรีวิว ใช้ชื่อลูกค้าต้นฉบับ (ไม่มีคำว่าแก้ไข)
         document.getElementById('outCustName').innerText = r.custName; 
         document.getElementById('outCustAddr').innerText = r.custAddr;
         document.getElementById('outCustTax').innerText = r.custTax ? "เลขประจำตัวผู้เสียภาษี " + r.custTax : "";
@@ -514,6 +511,7 @@
         const tInps = document.querySelectorAll('.term-input'); 
         if(r.terms) tInps.forEach((inp, idx) => inp.value = r.terms[idx] || "");
 
+        // แก้ไข: สั่งรันการคำนวณใหม่หลังจากโหลดรายการสินค้าเสร็จสิ้น
         updatePreview(); window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
