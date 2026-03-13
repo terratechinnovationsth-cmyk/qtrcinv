@@ -29,19 +29,8 @@
         .ver-badge { font-size: 10px; padding: 2px 6px; border-radius: 10px; background: #fd7e14; color: #fff; font-weight: bold; margin-left: 5px; }
         .time-label { font-size: 10px; color: #6c757d; display: block; }
         
-        /* Preview & Print Section - แก้ไขเพื่อหน้าเดียว 100% */
         .preview-section { background: #cbd5e0; padding: 40px 0; min-height: 100vh; }
-        .a4-page { 
-            width: 210mm; 
-            height: 297mm; 
-            margin: 0 auto; 
-            position: relative; 
-            background: #fff; 
-            box-shadow: 0 0 20px rgba(0,0,0,0.3); 
-            overflow: hidden; 
-            border: none;
-            display: block;
-        }
+        .a4-page { width: 210mm; height: 297mm; margin: 0 auto; position: relative; background: #fff; box-shadow: 0 0 20px rgba(0,0,0,0.3); overflow: hidden; border: none; display: block; }
         .bg-template { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
         .data-field { position: absolute; z-index: 2; font-weight: bold; color: #000; }
         .f-date { top: 95px; left: 107px; } .f-no { top: 112px; left: 120px; }
@@ -64,21 +53,19 @@
             html, body { width: 210mm; height: 297mm; margin: 0 !important; padding: 0 !important; overflow: hidden !important; background: #fff; }
             .no-print, .main-header, .main-footer, .no-print-section, .history-section, .preview-section > *:not(.a4-page) { display: none !important; } 
             .preview-section { padding: 0 !important; margin: 0 !important; background: none !important; overflow: hidden !important; width: 210mm; height: 297mm; } 
-            .a4-page { 
-                margin: 0 !important; 
-                box-shadow: none !important; 
-                width: 210mm !important; 
-                height: 297mm !important; 
-                position: absolute !important;
-                top: 0 !important;
-                left: 0 !important;
-                page-break-after: avoid !important;
-                page-break-before: avoid !important;
-                /* บีบขนาดลงเล็กน้อยเพื่อป้องกันเบราว์เซอร์ปัดหน้าใหม่ */
-                transform: scale(0.99); 
-                transform-origin: top left;
-            } 
+            .a4-page { margin: 0 !important; box-shadow: none !important; width: 210mm !important; height: 297mm !important; position: absolute !important; top: 0 !important; left: 0 !important; page-break-after: avoid !important; page-break-before: avoid !important; transform: scale(0.99); transform-origin: top left; } 
         }
+
+        /* ปุ่มบันทึกใหญ่ดีไซน์ใหม่ */
+        .btn-complete-save {
+            font-size: 1.25rem;
+            background-color: #0d5d3b;
+            border: none;
+            padding: 12px 0;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        .btn-complete-save:hover { background-color: #147a4f; color: white; }
+        .btn-complete-save:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
@@ -180,14 +167,14 @@
 
         <div class="mt-3 p-4 border rounded shadow-sm" style="background-color: #f8f9fa;">
             <label class="h6 fw-bold text-dark mb-3">📝 เงื่อนไขและข้อกำหนด (Terms and Conditions)</label>
-            <div class="row g-2 mb-4">
+            <div class="row g-2">
                 <div class="col-md-6"><input type="text" class="form-control form-control-sm mb-1 term-input" placeholder="ข้อที่ 1"><input type="text" class="form-control form-control-sm mb-1 term-input" placeholder="ข้อที่ 2"><input type="text" class="form-control form-control-sm mb-1 term-input" placeholder="ข้อที่ 3"><input type="text" class="form-control form-control-sm mb-1 term-input" placeholder="ข้อที่ 4"><input type="text" class="form-control form-control-sm mb-1 term-input" placeholder="ข้อที่ 5"></div>
                 <div class="col-md-6"><input type="text" class="form-control form-control-sm mb-1 term-input" placeholder="ข้อที่ 6"><input type="text" class="form-control form-control-sm mb-1 term-input" placeholder="ข้อที่ 7"><input type="text" class="form-control form-control-sm mb-1 term-input" placeholder="ข้อที่ 8"><input type="text" class="form-control form-control-sm mb-1 term-input" placeholder="ข้อที่ 9"><input type="text" class="form-control form-control-sm mb-1 term-input" placeholder="ข้อที่ 10"></div>
             </div>
-            <hr>
-            <div class="text-center pt-2">
-                <button class="btn btn-success btn-lg w-100 shadow-lg py-3 fw-bold" onclick="saveData()" style="font-size: 1.5rem; background-color: #0d5d3b;">💾 บันทึกรายการเอกสารสมบูรณ์ลงระบบ (Complete & Save)</button>
-            </div>
+        </div>
+
+        <div class="mt-3 no-print">
+            <button class="btn btn-success btn-complete-save w-100 shadow fw-bold" onclick="saveData()">💾 บันทึกรายการเอกสารสมบูรณ์ลงระบบ (Complete & Save)</button>
         </div>
     </div>
 </div>
@@ -385,15 +372,8 @@
         document.getElementById('outTax').innerText = tax.toLocaleString() + " บาท";
         document.getElementById('outTotal').innerText = total.toLocaleString() + " บาท";
         document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(total) + ")";
-        
-        const bName = document.getElementById('bankName').value, bAcc = document.getElementById('bankAccName').value, bType = document.getElementById('bankType').value, bNo = document.getElementById('bankNo').value;
-        let bankHtml = "";
-        if(bName) bankHtml += bName + "<br>";
-        if(bAcc) bankHtml += bAcc + "<br>";
-        if(bType) bankHtml += bType + "<br>";
-        if(bNo) bankHtml += bNo;
-        document.getElementById('outBankInfo').innerHTML = bankHtml;
-        
+        const bk = { name: document.getElementById('bankName').value, acc: document.getElementById('bankAccName').value, type: document.getElementById('bankType').value, no: document.getElementById('bankNo').value };
+        document.getElementById('outBankInfo').innerHTML = `${bk.name}<br>${bk.acc}<br>${bk.type}<br>${bk.no}`;
         const terms = document.querySelectorAll('.term-input');
         let t1 = '', t2 = '';
         terms.forEach((t, i) => { if(t.value) { if(i<5) t1 += `• ${t.value}<br>`; else t2 += `• ${t.value}<br>`; } });
@@ -446,18 +426,11 @@
         let html = '';
         r.items.forEach((it, i) => { const l = parseFloat(it.price) * parseFloat(it.qty); html += `<div class="item-row-print"><div class="c-desc">${i+1}. ${it.name}</div><div class="c-uprice">${parseFloat(it.price).toLocaleString()} /${it.unitLabel}</div><div class="c-qty">${it.qty} ${it.unit}</div><div class="c-total">${l.toLocaleString(undefined,{minimumFractionDigits:2})} บาท</div></div>`; });
         document.getElementById('outItemList').innerHTML = html;
-        document.getElementById('outSubtotal').innerText = (parseFloat(r.subtotal)||0).toLocaleString() + " บาท"; 
-        document.getElementById('outDiscount').innerText = (parseFloat(r.disc)||0).toLocaleString() + " บาท";
-        document.getElementById('outTax').innerText = (parseFloat(r.taxVal)||0).toLocaleString() + " บาท"; 
-        document.getElementById('outTotal').innerText = r.total;
+        document.getElementById('outSubtotal').innerText = (parseFloat(r.subtotal)||0).toLocaleString() + " บาท"; document.getElementById('outDiscount').innerText = (parseFloat(r.disc)||0).toLocaleString() + " บาท";
+        document.getElementById('outTax').innerText = (parseFloat(r.taxVal)||0).toLocaleString() + " บาท"; document.getElementById('outTotal').innerText = r.total;
         document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(r.total) + ")";
         const bk = r.bank || {};
-        let bkHtml = "";
-        if(bk.name) bkHtml += bk.name + "<br>";
-        if(bk.acc) bkHtml += bk.acc + "<br>";
-        if(bk.type) bkHtml += bk.type + "<br>";
-        if(bk.no) bkHtml += bk.no;
-        document.getElementById('outBankInfo').innerHTML = bkHtml;
+        document.getElementById('outBankInfo').innerHTML = `${bk.name}<br>${bk.acc}<br>${bk.type}<br>${bk.no}`;
         const t1 = r.terms.slice(0,5).filter(Boolean).map(t => `• ${t}`).join('<br>');
         const t2 = r.terms.slice(5,10).filter(Boolean).map(t => `• ${t}`).join('<br>');
         document.getElementById('outTerms').innerHTML = `<div style="width:50%">${t1}</div><div style="width:50%">${t2}</div>`;
