@@ -27,7 +27,6 @@
         .dash-count { font-size: 11px; color: #adb5bd; }
         .row-no { font-weight: bold; color: #495057; text-align: center; vertical-align: middle; background: #e9ecef !important; }
         
-        /* สไตล์พรีวิวจาก Backup (ไม่มีเส้นกรอบ) */
         .preview-section { background: #cbd5e0; padding: 40px 0; min-height: 100vh; }
         .a4-page { width: 210mm; height: 296mm; margin: 0 auto; position: relative; background: #fff; box-shadow: 0 0 20px rgba(0,0,0,0.3); overflow: hidden; border: none; }
         .bg-template { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
@@ -341,33 +340,43 @@
         document.getElementById('outCustTax').innerText = document.getElementById('custTax').value ? "เลขประจำตัวผู้เสียภาษี " + document.getElementById('custTax').value : "";
         
         let sub = 0, html = '';
-        const items = document.getElementsByClassName('in-item'), prices = document.getElementsByClassName('in-price'), qtys = document.getElementsByClassName('in-qty'), units = document.getElementsByClassName('in-unit'), labels = document.getElementsByClassName('in-unit-label'), lTotal = document.getElementsByClassName('line-total-val');
+        const items = document.querySelectorAll('.in-item');
+        const prices = document.querySelectorAll('.in-price');
+        const qtys = document.querySelectorAll('.in-qty');
+        const units = document.querySelectorAll('.in-unit');
+        const labels = document.querySelectorAll('.in-unit-label');
+        const lTotals = document.querySelectorAll('.line-total-val');
         
-        for(let i=0; i<items.length; i++) {
-            let p = parseFloat(prices[i].value || 0), q = parseFloat(qtys[i].value || 0), total = p * q;
-            sub += total; 
-            lTotal[i].innerText = total.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+        for(let i=0; i < items.length; i++) {
+            let p = parseFloat(prices[i].value) || 0;
+            let q = parseFloat(qtys[i].value) || 0;
+            let total = p * q;
+            sub += total;
+            
+            lTotals[i].innerText = total.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+            
             if(items[i].value || p > 0) {
                 html += `<div class="item-row-print"><div class="c-desc">${i+1}. ${items[i].value}</div><div class="c-uprice">${p.toLocaleString()} /${labels[i].value}</div><div class="c-qty">${q} ${units[i].value}</div><div class="c-total">${total.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})} บาท</div></div>`;
             }
         }
         
-        const disc = parseFloat(document.getElementById('inDiscount').value || 0), tRate = parseFloat(document.getElementById('inTaxRate').value || 7);
-        const tax = (sub - disc) * (tRate / 100), total = sub - disc + tax;
+        const disc = parseFloat(document.getElementById('inDiscount').value) || 0;
+        const tRate = parseFloat(document.getElementById('inTaxRate').value) || 7;
+        const tax = (sub - disc) * (tRate / 100);
+        const totalFinal = sub - disc + tax;
         
-        // แก้ไขส่วนการแสดงผลตัวเลข Subtotal และ Live Display ให้ถูกต้องแม่นยำ
         document.getElementById('liveSubtotal').innerText = sub.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
         document.getElementById('liveDiscountDisplay').innerText = disc.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
         document.getElementById('liveTax').innerText = tax.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
-        document.getElementById('liveTotal').innerText = total.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
-        document.getElementById('liveThaiBaht').innerText = "ตัวอักษร: (" + ThaiBaht(total) + ")";
+        document.getElementById('liveTotal').innerText = totalFinal.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+        document.getElementById('liveThaiBaht').innerText = "ตัวอักษร: (" + ThaiBaht(totalFinal) + ")";
         
         document.getElementById('outItemList').innerHTML = html;
-        document.getElementById('outSubtotal').innerText = sub.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
-        document.getElementById('outDiscount').innerText = disc.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
-        document.getElementById('outTax').innerText = tax.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
-        document.getElementById('outTotal').innerText = total.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
-        document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(total) + ")";
+        document.getElementById('outSubtotal').innerText = sub.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + " บาท";
+        document.getElementById('outDiscount').innerText = disc.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + " บาท";
+        document.getElementById('outTax').innerText = tax.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + " บาท";
+        document.getElementById('outTotal').innerText = totalFinal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + " บาท";
+        document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(totalFinal) + ")";
 
         const bk = { name: document.getElementById('bankName').value, acc: document.getElementById('bankAccName').value, type: document.getElementById('bankType').value, no: document.getElementById('bankNo').value };
         document.getElementById('outBankInfo').innerHTML = `${bk.name}<br>${bk.acc}<br>${bk.type}<br>${bk.no}`;
