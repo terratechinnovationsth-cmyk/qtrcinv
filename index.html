@@ -96,6 +96,7 @@
             <div class="col-md-2"><label class="small">วันที่</label><input type="text" id="inDate" class="form-control form-control-sm" oninput="updatePreview()"></div>
             <div class="col-md-2"><label class="small">เลขที่เอกสาร</label><input type="text" id="inNo" class="form-control form-control-sm" oninput="updatePreview()"></div>
             <div class="col-md-6 d-flex align-items-end gap-2">
+                <button class="btn btn-danger btn-sm w-100" onclick="sendToCustomerEmail()">📧 ส่งอีเมลลูกค้า</button>
                 <button class="btn btn-primary btn-sm w-100" onclick="window.print()">🖨️ พิมพ์</button>
                 <button class="btn btn-outline-secondary btn-sm" onclick="resetForm()">ล้างฟอร์ม</button>
             </div>
@@ -459,6 +460,15 @@
     function resetForm() { location.reload(); }
     function exportData() { const b = new Blob([JSON.stringify({ history: db, customers, banks }, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `TTI_Backup.json`; a.click(); }
     function importData(e) { const reader = new FileReader(); reader.onload = (f) => { const d = JSON.parse(f.target.result); localStorage.setItem(DB_KEY, JSON.stringify(d.history)); localStorage.setItem(CUST_KEY, JSON.stringify(d.customers)); localStorage.setItem(BANK_KEY, JSON.stringify(d.banks)); location.reload(); }; reader.readAsText(e.target.files[0]); }
+    
+    // ฟังก์ชันส่งอีเมล (ถ้ายังไม่มีการเขียน Logic ภายใน)
+    function sendToCustomerEmail() {
+        const email = document.getElementById('custEmail').value;
+        if(!email) return alert("โปรดระบุอีเมลลูกค้า");
+        alert("ระบบกำลังเตรียมส่งเอกสารไปยัง: " + email);
+        // Logic สำหรับ API ส่งอีเมลสามารถเพิ่มตรงนี้ได้
+    }
+
     window.onload = () => { document.getElementById('inDate').value = new Date().toLocaleDateString('th-TH'); updateCustomerDropdown(); updateBankDropdown(); addRow(); renderHistory(); };
 </script>
 </body>
