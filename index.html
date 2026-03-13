@@ -29,7 +29,7 @@
         .ver-badge { font-size: 10px; padding: 2px 6px; border-radius: 10px; background: #fd7e14; color: #fff; font-weight: bold; margin-left: 5px; }
         .time-label { font-size: 10px; color: #6c757d; display: block; }
         
-        /* Preview & Print Section - กำจัดเส้นขอบดำอย่างเด็ดขาด */
+        /* Preview & Print Section - กำจัดเส้นกรอบดำออกให้หมดอย่างเด็ดขาด */
         .preview-section { background: #cbd5e0; padding: 40px 0; min-height: 100vh; border: none !important; }
         .a4-page { 
             width: 210mm; 
@@ -39,7 +39,7 @@
             background: #fff; 
             box-shadow: none !important; /* ลบเงารอบกระดาษ */
             overflow: hidden; 
-            border: none !important; /* ลบเส้นขอบดำรอบนอก */
+            border: none !important; /* ลบเส้นกรอบดำรอบนอกอย่างเด็ดขาด */
             outline: none !important; /* ลบเส้น Focus */
             display: block;
         }
@@ -392,6 +392,7 @@
         document.getElementById('outTax').innerText = tax.toLocaleString() + " บาท";
         document.getElementById('outTotal').innerText = total.toLocaleString() + " บาท";
         document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(total) + ")";
+        
         const bk = { name: document.getElementById('bankName').value, acc: document.getElementById('bankAccName').value, type: document.getElementById('bankType').value, no: document.getElementById('bankNo').value };
         document.getElementById('outBankInfo').innerHTML = `${bk.name}<br>${bk.acc}<br>${bk.type}<br>${bk.no}`;
         const terms = document.querySelectorAll('.term-input');
