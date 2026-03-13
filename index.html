@@ -401,20 +401,21 @@
         const items = [];
         document.querySelectorAll('#itemRows tr').forEach(r => { items.push({ name: r.querySelector('.in-item').value, price: r.querySelector('.in-price').value, qty: r.querySelector('.in-qty').value, unit: r.querySelector('.in-unit').value, unitLabel: r.querySelector('.in-unit-label').value }); });
         
-        // --- ส่วนที่ปรับปรุง: ตรวจสอบการแก้ไขรายการ ---
-        let finalCustName = document.getElementById('custName').value;
+        let rawCustName = document.getElementById('custName').value;
         const editId = document.getElementById('editingRecordId').value;
         
-        // ถ้าเป็นการแก้ไข (มีค่าใน editingRecordId) และชื่อลูกค้ายังไม่มีคำว่า (แก้ไข)
-        if (editId && !finalCustName.includes("(แก้ไข)")) {
-            finalCustName = finalCustName + " (แก้ไข)";
+        // สถานะการแก้ไข: เก็บเป็น Boolean ในข้อมูล
+        let isEdited = false;
+        if (editId) {
+            isEdited = true;
         }
 
         const record = {
             id: editId ? parseInt(editId) : Date.now(), 
             timestamp: new Date().toLocaleString('th-TH'),
             no: document.getElementById('inNo').value, date: document.getElementById('inDate').value,
-            custName: finalCustName, 
+            custName: rawCustName, // เก็บชื่อดิบเพื่อนำไปแสดงผลในเอกสาร
+            isEdited: isEdited,    // เก็บสถานะว่ามีการแก้ไข
             custAddr: document.getElementById('custAddr').value, custEmail: document.getElementById('custEmail').value, custTax: document.getElementById('custTax').value,
             bank: { name: document.getElementById('bankName').value, acc: document.getElementById('bankAccName').value, type: document.getElementById('bankType').value, no: document.getElementById('bankNo').value },
             items, terms: Array.from(document.querySelectorAll('.term-input')).map(t => t.value),
@@ -422,7 +423,6 @@
             total: document.getElementById('liveTotal').innerText + " บาท", type: document.getElementById('docType').value
         };
 
-        // หากเป็นการแก้ไข ให้ลบรายการเดิมออกก่อนบันทึกใหม่
         if (editId) {
             db = db.filter(x => x.id !== parseInt(editId));
         }
@@ -435,7 +435,32 @@
         const s = document.getElementById('historySearch').value.toLowerCase();
         let filtered = db.filter(r => r.no.toLowerCase().includes(s) || r.custName.toLowerCase().includes(s));
         const body = document.getElementById('historyTableBody');
-        body.innerHTML = filtered.slice().reverse().map(r => `<tr><td><strong>${r.no}</strong></td><td><span class="time-label">${r.timestamp}</span></td><td>${r.custName}</td><td class="text-primary fw-bold">${r.total}</td><td><button class="btn btn-xs btn-outline-dark py-0" style="font-size:10px" onclick="quickPrintById(${r.id}, 'Quatation.png')">QT</button><button class="btn btn-xs btn-outline-dark py-0" style="font-size:10px" onclick="quickPrintById(${r.id}, 'Receipt.png')">RC</button><button class="btn btn-xs btn-outline-dark py-0" style="font-size:10px" onclick="quickPrintById(${r.id}, 'Delivery&invoice.png')">INV</button></td><td class="d-flex gap-1 justify-content-center"><button class="btn btn-info btn-sm py-0 text-white" onclick="viewRecordById(${r.id})">👁️</button><button class="btn btn-warning btn-sm py-0" onclick="loadRecordById(${r.id})">แก้</button><button class="btn btn-danger btn-sm py-0" onclick="deleteRecord(${r.id})">🗑️</button></td></tr>`).join('');
+        
+        body.innerHTML = filtered.slice().reverse().map(r => {
+            // ส่วนที่ปรับปรุง: แสดงคำว่า (แก้ไข) ตัวสีแดงเฉพาะในตารางประวัติเท่านั้น
+            let displayCustName = r.custName;
+            if (r.isEdited) {
+                displayCustName += ` <span style="color: red; font-weight: bold;">(แก้ไข)</span>`;
+            }
+
+            return `<tr>
+                <td><strong>${r.no}</strong></td>
+                <td><span class="time-label">${r.timestamp}</span></td>
+                <td>${displayCustName}</td>
+                <td class="text-primary fw-bold">${r.total}</td>
+                <td>
+                    <button class="btn btn-xs btn-outline-dark py-0" style="font-size:10px" onclick="quickPrintById(${r.id}, 'Quatation.png')">QT</button>
+                    <button class="btn btn-xs btn-outline-dark py-0" style="font-size:10px" onclick="quickPrintById(${r.id}, 'Receipt.png')">RC</button>
+                    <button class="btn btn-xs btn-outline-dark py-0" style="font-size:10px" onclick="quickPrintById(${r.id}, 'Delivery&invoice.png')">INV</button>
+                </td>
+                <td class="d-flex gap-1 justify-content-center">
+                    <button class="btn btn-info btn-sm py-0 text-white" onclick="viewRecordById(${r.id})">👁️</button>
+                    <button class="btn btn-warning btn-sm py-0" onclick="loadRecordById(${r.id})">แก้</button>
+                    <button class="btn btn-danger btn-sm py-0" onclick="deleteRecord(${r.id})">🗑️</button>
+                </td>
+            </tr>`;
+        }).join('');
+
         let q = 0, i = 0, r = 0;
         db.forEach(d => { const v = parseFloat(d.total.replace(/,/g, '')); if(d.type === 'Quatation.png') q += v; else if(d.type === 'Delivery&invoice.png') i += v; else r += v; });
         document.getElementById('dashTotalQT').innerText = q.toLocaleString() + " บาท"; document.getElementById('dashTotalINV').innerText = i.toLocaleString() + " บาท"; document.getElementById('dashTotalRC').innerText = r.toLocaleString() + " บาท";
@@ -448,8 +473,11 @@
     function renderA4Data(r, type) {
         document.getElementById('viewTemplate').src = type;
         document.getElementById('outDate').innerText = r.date; document.getElementById('outNo').innerText = r.no;
-        document.getElementById('outCustName').innerText = r.custName; document.getElementById('outCustAddr').innerText = r.custAddr;
+        // ในหน้าเอกสารพรีวิว ใช้ชื่อลูกค้าต้นฉบับ (ไม่มีคำว่าแก้ไข)
+        document.getElementById('outCustName').innerText = r.custName; 
+        document.getElementById('outCustAddr').innerText = r.custAddr;
         document.getElementById('outCustTax').innerText = r.custTax ? "เลขประจำตัวผู้เสียภาษี " + r.custTax : "";
+        
         let html = '';
         r.items.forEach((it, i) => { const l = parseFloat(it.price) * parseFloat(it.qty); html += `<div class="item-row-print"><div class="c-desc">${i+1}. ${it.name}</div><div class="c-uprice">${parseFloat(it.price).toLocaleString()} /${it.unitLabel}</div><div class="c-qty">${it.qty} ${it.unit}</div><div class="c-total">${l.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})} บาท</div></div>`; });
         document.getElementById('outItemList').innerHTML = html;
@@ -467,7 +495,6 @@
 
     function loadRecordById(id) {
         const r = db.find(x => x.id === id); if(!r) return;
-        // เก็บ ID รายการที่จะแก้ไข
         document.getElementById('editingRecordId').value = r.id;
 
         document.getElementById('docType').value = r.type; document.getElementById('inDate').value = r.date; document.getElementById('inNo').value = r.no;
@@ -484,7 +511,6 @@
             last.querySelector('.in-unit').value = it.unit; 
         });
         
-        // โหลดเงื่อนไขกลับมา
         const tInps = document.querySelectorAll('.term-input'); 
         if(r.terms) tInps.forEach((inp, idx) => inp.value = r.terms[idx] || "");
 
@@ -496,7 +522,7 @@
     function showAllHistory() { document.getElementById('historySearch').value = ""; renderHistory(); }
     
     function resetForm() { 
-        document.getElementById('editingRecordId').value = ""; // ล้างค่า ID ที่แก้ไข
+        document.getElementById('editingRecordId').value = "";
         location.reload(); 
     }
 
