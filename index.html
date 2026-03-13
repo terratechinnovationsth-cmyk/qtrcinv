@@ -29,11 +29,10 @@
         .ver-badge { font-size: 10px; padding: 2px 6px; border-radius: 10px; background: #fd7e14; color: #fff; font-weight: bold; margin-left: 5px; }
         .time-label { font-size: 10px; color: #6c757d; display: block; }
         
-        /* Preview & Print Section ปรับปรุงใหม่ */
         .preview-section { background: #cbd5e0; padding: 40px 0; min-height: 100vh; }
         .a4-page { 
             width: 210mm; 
-            height: 296mm; /* บีบขนาดความสูงลงเล็กน้อยเพื่อความปลอดภัย */
+            height: 296mm; 
             margin: 0 auto; 
             position: relative; 
             background: #fff; 
@@ -62,14 +61,7 @@
             html, body { width: 210mm; height: 297mm; margin: 0; padding: 0; background: #fff; overflow: hidden; }
             .no-print, .main-header, .main-footer, .no-print-section, .history-section, .preview-section > *:not(.a4-page) { display: none !important; } 
             .preview-section { padding: 0 !important; margin: 0 !important; background: none !important; } 
-            .a4-page { 
-                margin: 0 !important; 
-                box-shadow: none !important; 
-                width: 210mm !important; 
-                height: 296.8mm !important; /* บังคับให้เป็นความสูงมาตรฐาน A4 */
-                page-break-after: avoid;
-                page-break-before: avoid;
-            } 
+            .a4-page { margin: 0 !important; box-shadow: none !important; width: 210mm !important; height: 296.8mm !important; page-break-after: avoid; page-break-before: avoid; } 
         }
     </style>
 </head>
@@ -91,7 +83,7 @@
 <div class="no-print-section no-print">
     <div class="container">
         <div class="backup-panel d-flex justify-content-between align-items-center shadow-sm">
-            <div><span class="fw-bold text-secondary mr-3">🗄️ จัดการฐานข้อมูล:</span><small class="text-muted ml-2">(สำรองข้อมูลรายชื่อลูกค้าและประวัติทั้งหมดลงเครื่อง)</small></div>
+            <div><span class="fw-bold text-secondary mr-3">🗄️ จัดการฐานข้อมูล:</span><small class="text-muted ml-2">(สำรองข้อมูลลงเครื่อง)</small></div>
             <div class="d-flex gap-2">
                 <button class="btn btn-outline-secondary btn-sm" onclick="exportData()">📤 สำรองข้อมูล (Export)</button>
                 <button class="btn btn-outline-primary btn-sm" onclick="document.getElementById('importFile').click()">📥 นำเข้าข้อมูล (Import)</button>
@@ -129,7 +121,7 @@
                 <input type="text" id="custName" class="form-control form-control-sm" placeholder="ชื่อลูกค้าใหม่" oninput="updatePreview()">
             </div>
             <div class="col-md-4"><label class="small">ที่อยู่</label><input type="text" id="custAddr" class="form-control form-control-sm" oninput="updatePreview()"></div>
-            <div class="col-md-2"><label class="small">อีเมลลูกค้า</label><input type="email" id="custEmail" class="form-control form-control-sm" placeholder="example@email.com" oninput="updatePreview()"></div>
+            <div class="col-md-2"><label class="small">อีเมลลูกค้า</label><input type="email" id="custEmail" class="form-control form-control-sm" oninput="updatePreview()"></div>
             <div class="col-md-2"><label class="small">เลขผู้เสียภาษี</label><input type="text" id="custTax" class="form-control form-control-sm" oninput="updatePreview()"></div>
             <div class="col-md-1 d-flex align-items-end">
                 <button class="btn btn-primary btn-sm w-100 fw-bold" onclick="saveCustomerFull()">➕ บันทึก</button>
@@ -146,7 +138,7 @@
                 <input type="text" id="bankName" class="form-control form-control-sm" placeholder="ชื่อธนาคาร" oninput="updatePreview()">
             </div>
             <div class="col-md-3"><label class="small text-success">ชื่อบัญชี</label><input type="text" id="bankAccName" class="form-control form-control-sm" oninput="updatePreview()"></div>
-            <div class="col-md-2"><label class="small text-success">ประเภทบัญชี</label><input type="text" id="bankType" class="form-control form-control-sm" placeholder="ออมทรัพย์/กระแสรายวัน" oninput="updatePreview()"></div>
+            <div class="col-md-2"><label class="small text-success">ประเภทบัญชี</label><input type="text" id="bankType" class="form-control form-control-sm" oninput="updatePreview()"></div>
             <div class="col-md-3"><label class="small text-success">เลขที่บัญชี</label><input type="text" id="bankNo" class="form-control form-control-sm" oninput="updatePreview()"></div>
             <div class="col-md-1 d-flex align-items-end">
                 <button class="btn btn-success btn-sm w-100 fw-bold" onclick="saveBankFull()">➕ บันทึก</button>
@@ -186,11 +178,11 @@
 
 <div class="no-print-section no-print bg-light border-top-0">
     <div class="container">
-        <h5 class="text-secondary fw-bold mb-3">3. แผงควบคุมและสรุปผล (Business Dashboard)</h5>
+        <h5 class="text-secondary fw-bold mb-3">3. แผงควบคุมและสรุปผล</h5>
         <div class="row g-3">
-            <div class="col-md-4"><div class="dash-card dash-qt"><div class="dash-title">รวมใบเสนอราคา (QT)</div><div class="dash-value text-secondary" id="dashTotalQT">0.00 บาท</div><div class="dash-count" id="dashCountQT">0 รายการ</div></div></div>
-            <div class="col-md-4"><div class="dash-card dash-inv"><div class="dash-title">รวมใบแจ้งหนี้ (INV)</div><div class="dash-value text-info" id="dashTotalINV">0.00 บาท</div><div class="dash-count" id="dashCountINV">0 รายการ</div></div></div>
-            <div class="col-md-4"><div class="dash-card dash-rc"><div class="dash-title">รายรับใบเสร็จ (RC)</div><div class="dash-value text-success" id="dashTotalRC">0.00 บาท</div><div class="dash-count" id="dashCountRC">0 รายการ</div></div></div>
+            <div class="col-md-4"><div class="dash-card dash-qt"><div class="dash-title">QT</div><div class="dash-value text-secondary" id="dashTotalQT">0.00 บาท</div><div class="dash-count" id="dashCountQT">0 รายการ</div></div></div>
+            <div class="col-md-4"><div class="dash-card dash-inv"><div class="dash-title">INV</div><div class="dash-value text-info" id="dashTotalINV">0.00 บาท</div><div class="dash-count" id="dashCountINV">0 รายการ</div></div></div>
+            <div class="col-md-4"><div class="dash-card dash-rc"><div class="dash-title">RC</div><div class="dash-value text-success" id="dashTotalRC">0.00 บาท</div><div class="dash-count" id="dashCountRC">0 รายการ</div></div></div>
         </div>
     </div>
 </div>
@@ -218,7 +210,6 @@
 <div class="preview-section">
     <div class="container d-flex flex-column align-items-center mb-2 no-print">
         <div id="viewModeController" class="btn-group btn-group-sm">
-            <span class="text-white px-3 align-self-center small fw-bold">สลับดูประวัติ: </span>
             <button class="btn btn-outline-light px-3" onclick="switchViewType('Quatation.png')">QT</button>
             <button class="btn btn-outline-light px-3" onclick="switchViewType('Receipt.png')">RC</button>
             <button class="btn btn-outline-light px-3" onclick="switchViewType('Delivery&invoice.png')">INV</button>
@@ -229,7 +220,7 @@
     <div class="a4-page">
         <img id="viewTemplate" src="Quatation.png" class="bg-template">
         <div class="data-field f-date" id="outDate"></div><div class="data-field f-no" id="outNo"></div>
-        <div class="data-field f-client"><div id="outCustName"></div><div id="outCustAddr" style="font-size:11.5px; font-weight:normal;"></div><div id="outCustTax" style="font-size:11.5px; font-weight:normal;"></div></div>
+        <div class="data-field f-client"><div id="outCustName"></div><div id="outCustAddr" style="font-size:11.5px;"></div><div id="outCustTax" style="font-size:11.5px;"></div></div>
         <div id="outItemList" class="item-container"></div>
         <div class="data-field f-subtotal" id="outSubtotal"></div><div class="data-field f-discount" id="outDiscount"></div><div class="data-field f-tax" id="outTax"></div><div class="data-field f-grandtotal" id="outTotal"></div>
         <div class="data-field f-baht-text" id="outThaiBaht"></div>
@@ -246,7 +237,7 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwZfGe6S5et_QZlZRVMFm2WALYVZIM3a4y48BvIm1fvLk7PiwfiavISLmULeKTAX80B8Q/exec";
 
     let currentViewingId = null;
-    const UNIT_OPTIONS = `<option value="กิโลกรัม">กิโลกรัม</option><option value="กรัม">กรัม</option><option value="ตัน">ตัน</option><option value="ลิตร">ลิตร</option><option value="มิลลิลิตร">มิลลิลิตร</option><option value="ต้น">ต้น</option><option value="ชิ้น">ชิ้น</option><option value="ชุด">ชุด</option><option value="กล่อง">กล่อง</option>`;
+    const UNIT_OPTIONS = `<option value="กิโลกรัม">กิโลกรัม</option><option value="ชิ้น">ชิ้น</option><option value="ชุด">ชุด</option><option value="กล่อง">กล่อง</option><option value="ตัน">ตัน</option><option value="ลิตร">ลิตร</option>`;
 
     function getStoredData(key) { return JSON.parse(localStorage.getItem(key) || '[]'); }
     let db = getStoredData(DB_KEY);
@@ -261,36 +252,30 @@
                 headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify(payload)
             });
-        } catch (e) { console.error("Cloud Error", e); }
+        } catch (e) { console.error(e); }
     }
 
-    // --- ส่วนลูกค้า ---
     function saveCustomerFull() {
         const name = document.getElementById('custName').value.trim();
         const addr = document.getElementById('custAddr').value.trim();
         const email = document.getElementById('custEmail').value.trim();
         const tax = document.getElementById('custTax').value.trim();
-        if(!name) return alert("กรุณาระบุชื่อลูกค้า");
-
-        const payload = { onlyCustomer: true, custName: name, custAddr: addr, custEmail: email, custTax: tax };
-        uploadToCloud(payload);
+        if(!name) return alert("ระบุชื่อลูกค้า");
+        uploadToCloud({ onlyCustomer: true, custName: name, custAddr: addr, custEmail: email, custTax: tax });
         customers.push({ name, addr, email, tax });
         localStorage.setItem(CUST_KEY, JSON.stringify(customers));
-        updateCustomerDropdown();
-        alert("บันทึกลูกค้าแล้ว");
+        updateCustomerDropdown(); alert("บันทึกลูกค้าแล้ว");
     }
 
     function deleteCustomerFromDb() {
         const idx = document.getElementById('custSelect').value;
-        if(idx === "") return;
-        if(confirm("ลบรายชื่อ?")) {
-            customers.splice(idx, 1);
-            localStorage.setItem(CUST_KEY, JSON.stringify(customers));
-            updateCustomerDropdown();
-            document.getElementById('custName').value = ""; document.getElementById('custAddr').value = "";
-            document.getElementById('custEmail').value = ""; document.getElementById('custTax').value = "";
-            alert("ลบเรียบร้อย"); updatePreview();
-        }
+        if(idx === "" || !confirm("ลบรายชื่อ?")) return;
+        customers.splice(idx, 1);
+        localStorage.setItem(CUST_KEY, JSON.stringify(customers));
+        updateCustomerDropdown();
+        document.getElementById('custName').value = ""; document.getElementById('custAddr').value = "";
+        document.getElementById('custEmail').value = ""; document.getElementById('custTax').value = "";
+        updatePreview();
     }
 
     function updateCustomerDropdown() {
@@ -307,33 +292,27 @@
         updatePreview();
     }
 
-    // --- ส่วนธนาคาร ---
     function saveBankFull() {
         const name = document.getElementById('bankName').value.trim();
         const acc = document.getElementById('bankAccName').value.trim();
         const type = document.getElementById('bankType').value.trim();
         const no = document.getElementById('bankNo').value.trim();
         if(!no) return alert("ระบุเลขที่บัญชี");
-
-        const payload = { onlyBank: true, bank: { name, acc, type, no } };
-        uploadToCloud(payload);
+        uploadToCloud({ onlyBank: true, bank: { name, acc, type, no } });
         banks.push({ name, acc, type, no });
         localStorage.setItem(BANK_KEY, JSON.stringify(banks));
-        updateBankDropdown();
-        alert("บันทึกธนาคารแล้ว");
+        updateBankDropdown(); alert("บันทึกธนาคารแล้ว");
     }
 
     function deleteBankFromDb() {
         const idx = document.getElementById('bankSelect').value;
-        if(idx === "") return;
-        if(confirm("ลบบัญชี?")) {
-            banks.splice(idx, 1);
-            localStorage.setItem(BANK_KEY, JSON.stringify(banks));
-            updateBankDropdown();
-            document.getElementById('bankName').value = ""; document.getElementById('bankAccName').value = "";
-            document.getElementById('bankType').value = ""; document.getElementById('bankNo').value = "";
-            alert("ลบเรียบร้อย"); updatePreview();
-        }
+        if(idx === "" || !confirm("ลบบัญชี?")) return;
+        banks.splice(idx, 1);
+        localStorage.setItem(BANK_KEY, JSON.stringify(banks));
+        updateBankDropdown();
+        document.getElementById('bankName').value = ""; document.getElementById('bankAccName').value = "";
+        document.getElementById('bankType').value = ""; document.getElementById('bankNo').value = "";
+        updatePreview();
     }
 
     function updateBankDropdown() {
@@ -404,7 +383,7 @@
         document.getElementById('liveDiscountDisplay').innerText = disc.toLocaleString(undefined,{minimumFractionDigits:2});
         document.getElementById('liveTax').innerText = tax.toLocaleString(undefined,{minimumFractionDigits:2});
         document.getElementById('liveTotal').innerText = total.toLocaleString(undefined,{minimumFractionDigits:2});
-        document.getElementById('liveThaiBaht').innerText = ThaiBaht(total);
+        document.getElementById('liveThaiBaht').innerText = "ตัวอักษร: (" + ThaiBaht(total) + ")";
         
         document.getElementById('outItemList').innerHTML = html;
         document.getElementById('outSubtotal').innerText = sub.toLocaleString() + " บาท";
@@ -412,7 +391,18 @@
         document.getElementById('outTax').innerText = tax.toLocaleString() + " บาท";
         document.getElementById('outTotal').innerText = total.toLocaleString() + " บาท";
         document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(total) + ")";
-        document.getElementById('outBankInfo').innerHTML = `ธนาคาร: ${document.getElementById('bankName').value}<br>เลขที่: ${document.getElementById('bankNo').value}`;
+
+        // แก้ไขส่วนดึงข้อมูลธนาคารพรีวิว
+        const bName = document.getElementById('bankName').value;
+        const bAcc = document.getElementById('bankAccName').value;
+        const bType = document.getElementById('bankType').value;
+        const bNo = document.getElementById('bankNo').value;
+        let bankHtml = "";
+        if(bName) bankHtml += bName + "<br>";
+        if(bAcc) bankHtml += bAcc + "<br>";
+        if(bType) bankHtml += bType + "<br>";
+        if(bNo) bankHtml += bNo;
+        document.getElementById('outBankInfo').innerHTML = bankHtml;
         
         const terms = document.querySelectorAll('.term-input');
         let t1 = '', t2 = '';
@@ -425,18 +415,13 @@
         document.querySelectorAll('#itemRows tr').forEach(r => {
             items.push({ name: r.querySelector('.in-item').value, price: r.querySelector('.in-price').value, qty: r.querySelector('.in-qty').value, unit: r.querySelector('.in-unit').value, unitLabel: r.querySelector('.in-unit-label').value });
         });
-        const subVal = parseFloat(document.getElementById('liveSubtotal').innerText.replace(/,/g, ''));
-        const discVal = parseFloat(document.getElementById('inDiscount').value || 0);
-        const taxVal = parseFloat(document.getElementById('liveTax').innerText.replace(/,/g, ''));
-        const taxR = document.getElementById('inTaxRate').value;
-
         const record = {
             id: Date.now(), timestamp: new Date().toLocaleString('th-TH'),
             no: document.getElementById('inNo').value, date: document.getElementById('inDate').value,
             custName: document.getElementById('custName').value, custAddr: document.getElementById('custAddr').value, custEmail: document.getElementById('custEmail').value, custTax: document.getElementById('custTax').value,
             bank: { name: document.getElementById('bankName').value, acc: document.getElementById('bankAccName').value, type: document.getElementById('bankType').value, no: document.getElementById('bankNo').value },
             items, terms: Array.from(document.querySelectorAll('.term-input')).map(t => t.value),
-            subtotal: subVal, disc: discVal, taxR: taxR, taxVal: taxVal,
+            subtotal: parseFloat(document.getElementById('liveSubtotal').innerText.replace(/,/g, '')), disc: document.getElementById('inDiscount').value, taxR: document.getElementById('inTaxRate').value, taxVal: parseFloat(document.getElementById('liveTax').innerText.replace(/,/g, '')),
             total: document.getElementById('liveTotal').innerText + " บาท", type: document.getElementById('docType').value
         };
         db.push(record); localStorage.setItem(DB_KEY, JSON.stringify(db));
@@ -484,7 +469,16 @@
         document.getElementById('outTax').innerText = (parseFloat(r.taxVal)||0).toLocaleString() + " บาท";
         document.getElementById('outTotal').innerText = r.total;
         document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(r.total) + ")";
-        document.getElementById('outBankInfo').innerHTML = `ธนาคาร: ${r.bank.name}<br>เลขที่: ${r.bank.no}`;
+        
+        // แก้ไขส่วนดึงข้อมูลธนาคารเรียกดูประวัติ
+        const bk = r.bank || {};
+        let bkHtml = "";
+        if(bk.name) bkHtml += bk.name + "<br>";
+        if(bk.acc) bkHtml += bk.acc + "<br>";
+        if(bk.type) bkHtml += bk.type + "<br>";
+        if(bk.no) bkHtml += bk.no;
+        document.getElementById('outBankInfo').innerHTML = bkHtml;
+
         const t1 = r.terms.slice(0,5).filter(Boolean).map(t => `• ${t}`).join('<br>');
         const t2 = r.terms.slice(5,10).filter(Boolean).map(t => `• ${t}`).join('<br>');
         document.getElementById('outTerms').innerHTML = `<div style="width:50%">${t1}</div><div style="width:50%">${t2}</div>`;
@@ -497,7 +491,12 @@
         document.getElementById('custName').value = r.custName; document.getElementById('custAddr').value = r.custAddr;
         document.getElementById('custEmail').value = r.custEmail || ""; document.getElementById('custTax').value = r.custTax;
         document.getElementById('inDiscount').value = r.disc; document.getElementById('inTaxRate').value = r.taxR;
-        if(r.bank) { document.getElementById('bankName').value = r.bank.name; document.getElementById('bankAccName').value = r.bank.acc; document.getElementById('bankType').value = r.bank.type; document.getElementById('bankNo').value = r.bank.no; }
+        if(r.bank) { 
+            document.getElementById('bankName').value = r.bank.name || ""; 
+            document.getElementById('bankAccName').value = r.bank.acc || ""; 
+            document.getElementById('bankType').value = r.bank.type || ""; 
+            document.getElementById('bankNo').value = r.bank.no || ""; 
+        }
         document.getElementById('itemRows').innerHTML = "";
         r.items.forEach(it => { addRow(); const last = document.getElementById('itemRows').lastElementChild; last.querySelector('.in-item').value = it.name; last.querySelector('.in-price').value = it.price; last.querySelector('.in-unit-label').value = it.unitLabel; last.querySelector('.in-qty').value = it.qty; last.querySelector('.in-unit').value = it.unit; });
         const tInps = document.querySelectorAll('.term-input'); if(r.terms) tInps.forEach((inp, idx) => inp.value = r.terms[idx] || "");
