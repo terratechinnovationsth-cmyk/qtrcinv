@@ -330,7 +330,7 @@
         const s = document.getElementById('custSelect');
         s.innerHTML = '<option value="">-- รายชื่อที่บันทึกไว้ --</option>';
         customers.forEach((c, i) => {
-            // ดึงชื่อลูกค้ามาจาก Property '.name' (ซึ่งเป็นคอลัมน์ A ในตรรกะข้อมูล Customers)
+            // แก้ไข: แสดงเฉพาะ 'c.name' เท่านั้น ไม่เอาที่อยู่มาแสดงใน dropdown
             const displayName = c.name || "ไม่ระบุชื่อ";
             s.innerHTML += `<option value="${i}">${displayName}</option>`;
         });
@@ -340,7 +340,6 @@
         const s = document.getElementById('bankSelect');
         s.innerHTML = '<option value="">-- บัญชีที่บันทึกไว้ --</option>';
         banks.forEach((b, i) => {
-            // ดึงชื่อธนาคารมาจาก Property '.name' (ชื่อธนาคาร)
             const displayName = b.name || "ไม่ระบุธนาคาร";
             s.innerHTML += `<option value="${i}">${displayName}</option>`;
         });
@@ -349,8 +348,11 @@
     function selectCustomer(i) {
         if(i === "") return;
         const c = customers[i];
-        document.getElementById('custName').value = c.name; document.getElementById('custAddr').value = c.addr;
-        document.getElementById('custEmail').value = c.email || ""; document.getElementById('custTax').value = c.tax || "";
+        // เมื่อเลือกชื่อจาก dropdown ข้อมูลที่อยู่จะถูกนำไปใส่ใน input box ตามปกติ
+        document.getElementById('custName').value = c.name; 
+        document.getElementById('custAddr').value = c.addr;
+        document.getElementById('custEmail').value = c.email || ""; 
+        document.getElementById('custTax').value = c.tax || "";
         updatePreview();
     }
 
