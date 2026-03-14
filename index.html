@@ -244,6 +244,7 @@
     const DB_KEY = 'TTI_GLOBAL_HISTORY';
     const CUST_KEY = 'TTI_GLOBAL_CUSTOMERS';
     const BANK_KEY = 'TTI_GLOBAL_BANKS';
+    // อัปเดต URL ใหม่ตามที่ระบุ
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3kfhMsrSOqe_CZfEzj1BF-Cg2HgBgTVSp5x7K4efj2LIbst44qB1L_zrrFClqj58J8w/exec";
 
     let db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
@@ -294,14 +295,15 @@
         banks.forEach((b, i) => s.innerHTML += `<option value="${i}">${b.name}</option>`);
     }
 
-    // แก้ไข: ปรับลำดับ Property ให้ถูกต้องตามช่องกรอกข้อมูล (ชื่อบัญชี, ประเภท, เลขบัญชี)
+    // แก้ไข: ลำดับ Property ให้ตรงกับช่องกรอกเพื่อป้องกันการเลื่อนตำแหน่งและค่า undefined
     function selectBank(i) {
         if(i === "") return;
         const b = banks[i];
-        document.getElementById('bankName').value = b.name; 
+        // แก้ไขลำดับการ Mapping ใหม่
+        document.getElementById('bankName').value = b.name;    // ชื่อธนาคาร
         document.getElementById('bankAccName').value = b.acc; // ชื่อบัญชี
-        document.getElementById('bankType').value = b.type;    // ประเภทบัญชี
-        document.getElementById('bankNo').value = b.no;        // เลขที่บัญชี
+        document.getElementById('bankType').value = b.type;   // ประเภทบัญชี
+        document.getElementById('bankNo').value = b.no;       // เลขที่บัญชี
         updatePreview();
     }
 
@@ -365,10 +367,7 @@
         document.getElementById('outTax').innerText = tax.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
         document.getElementById('outTotal').innerText = totalFinal.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
         document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(totalFinal) + ")";
-        
-        // ข้อมูลธนาคาร 4 บรรทัด (ตามที่แก้ไขก่อนหน้าซึ่งถูกต้องแล้ว)
         document.getElementById('outBankInfo').innerHTML = `${document.getElementById('bankName').value}<br>${document.getElementById('bankAccName').value}<br>${document.getElementById('bankType').value}<br>${document.getElementById('bankNo').value}`;
-        
         const terms = document.querySelectorAll('.term-input');
         let t1 = '', t2 = '';
         terms.forEach((t, i) => { if(t.value) { if(i<5) t1 += `• ${t.value}<br>`; else t2 += `• ${t.value}<br>`; } });
