@@ -274,7 +274,7 @@
         n = n.toString().replace(/,/g, ""); n = parseFloat(n); if (isNaN(n) || n == 0) return "ศูนย์บาทถ้วน";
         var s = n.toFixed(2).split("."); var B = s[0], St = s[1];
         function C(A) {
-            const TN = ["ศูนย์", "หนึ่ง", "สอง", "สาม", "สี่", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
+            const TN = ["ศูนย์", "หนึ่ง", "สอง", "สาม", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
             const TU = ["", "สิบ", "ร้อย", "พัน", "หมื่น", "แสน", "ล้าน"];
             var R = ""; var L = A.length;
             for (var i = 0; i < L; i++) {
@@ -314,8 +314,6 @@
         const tRate = parseFloat(document.getElementById('inTaxRate').value) || 7;
         const taxValCalc = (sub - disc) * (tRate / 100);
         const totalFinal = sub - disc + taxValCalc;
-
-        // แก้ไข: ให้ค่าตัวอักษรอ้างอิงจาก totalFinal ที่เป็นยอดรวมสุทธิเสมอ
         const finalBahtStr = ThaiBaht(totalFinal);
 
         document.getElementById('liveSubtotal').innerText = sub.toLocaleString(undefined,{minimumFractionDigits:2});
@@ -346,10 +344,7 @@
         let filtered = db.filter(r => r.no.toLowerCase().includes(s) || (r.custName && r.custName.toLowerCase().includes(s)));
         const body = document.getElementById('historyTableBody');
         body.innerHTML = filtered.slice().reverse().map(r => `<tr>
-            <td><strong>${r.no}</strong></td>
-            <td>${r.timestamp}</td>
-            <td>${r.custName}</td>
-            <td class="text-primary fw-bold">${r.total}</td>
+            <td><strong>${r.no}</strong></td><td>${r.timestamp}</td><td>${r.custName}</td><td class="text-primary fw-bold">${r.total}</td>
             <td>
                 <button class="btn btn-xs btn-outline-dark py-0" style="font-size:10px" onclick="quickPrintById(${r.id}, 'Quatation.png')">QT</button>
                 <button class="btn btn-xs btn-outline-dark py-0" style="font-size:10px" onclick="quickPrintById(${r.id}, 'Receipt.png')">RC</button>
@@ -362,8 +357,7 @@
             </td>
         </tr>`).join('');
 
-        let q = 0, i = 0, rc = 0; 
-        let qc = 0, ic = 0, rcc = 0;
+        let q = 0, i = 0, rc = 0, qc = 0, ic = 0, rcc = 0;
         db.forEach(d => { 
             const v = parseFloat(d.total.replace(/,/g, '').replace(' บาท', '')) || 0; 
             if(d.type === 'Quatation.png') { q += v; qc++; }
@@ -390,13 +384,26 @@
         syncToCloud(record); alert("บันทึกแล้ว"); location.reload();
     }
 
+    // แก้ไขเฉพาะส่วนนี้: เพิ่มการคำนวณยอดรวมรายบรรทัดเมื่อกด "แก้"
     function loadRecordById(id) {
         const r = db.find(x => x.id === id); if(!r) return; document.getElementById('editingRecordId').value = r.id;
         document.getElementById('docType').value = r.type; document.getElementById('inNo').value = r.no; 
         document.getElementById('custName').value = r.custName; document.getElementById('custAddr').value = r.custAddr; document.getElementById('custTax').value = r.custTax || "";
         document.getElementById('inDiscount').value = r.disc || 0;
         document.getElementById('bankName').value = r.bank.name; document.getElementById('bankAccName').value = r.bank.acc; document.getElementById('bankType').value = r.bank.type; document.getElementById('bankNo').value = r.bank.no;
-        document.getElementById('itemRows').innerHTML = ""; r.items.forEach(it => { addRow(); const last = document.getElementById('itemRows').lastElementChild; last.querySelector('.in-item').value = it.name; last.querySelector('.in-price').value = it.price; last.querySelector('.in-qty').value = it.qty; last.querySelector('.in-unit').value = it.unit; last.querySelector('.in-unit-label').value = it.unitLabel; });
+        document.getElementById('itemRows').innerHTML = ""; 
+        r.items.forEach(it => { 
+            addRow(); 
+            const last = document.getElementById('itemRows').lastElementChild; 
+            last.querySelector('.in-item').value = it.name; 
+            last.querySelector('.in-price').value = it.price; 
+            last.querySelector('.in-qty').value = it.qty; 
+            last.querySelector('.in-unit').value = it.unit; 
+            last.querySelector('.in-unit-label').value = it.unitLabel;
+            // คำนวณยอดรวมรายบรรทัดทันที
+            const lineTotal = (parseFloat(it.price) || 0) * (parseFloat(it.qty) || 0);
+            last.querySelector('.line-total-val').innerText = lineTotal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+        });
         updatePreview(); window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -428,8 +435,6 @@
         document.getElementById('outDiscount').innerText = (parseFloat(r.disc)||0).toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
         document.getElementById('outTax').innerText = r.taxVal + " บาท";
         document.getElementById('outTotal').innerText = r.total; 
-        
-        // คำนวณตัวอักษรไทยจากยอด total ในประวัติ (ล้างตัวอักษร ' บาท' และ ',' ออกก่อน)
         const totalNum = parseFloat(r.total.replace(/,/g, '').replace(' บาท', ''));
         document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(totalNum) + ")";
         document.getElementById('outBankInfo').innerHTML = `${r.bank.name}<br>${r.bank.acc}<br>${r.bank.type}<br>${r.bank.no}`;
