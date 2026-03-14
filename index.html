@@ -229,7 +229,7 @@
     </div>
 </div>
 
-<footer class="main-footer"><p>© 2026 บริษัทเทอร่าเทค อินโนเวชั่นส์ จำกัด</p></footer>
+<footer class="main-footer no-print"><p>© 2026 บริษัทเทอร่าเทค อินโนเวชั่นส์ จำกัด</p></footer>
 
 <script>
     const DB_KEY = 'TTI_GLOBAL_HISTORY';
@@ -274,7 +274,7 @@
         n = n.toString().replace(/,/g, ""); n = parseFloat(n); if (isNaN(n) || n == 0) return "ศูนย์บาทถ้วน";
         var s = n.toFixed(2).split("."); var B = s[0], St = s[1];
         function C(A) {
-            const TN = ["ศูนย์", "หนึ่ง", "สอง", "สาม", "สี่", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
+            const TN = ["ศูนย์", "หนึ่ง", "สอง", "สาม", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
             const TU = ["", "สิบ", "ร้อย", "พัน", "หมื่น", "แสน", "ล้าน"];
             var R = ""; var L = A.length;
             for (var i = 0; i < L; i++) {
@@ -341,17 +341,9 @@
 
     function renderHistory() {
         const s = document.getElementById('historySearch').value.toLowerCase();
-        
-        // กรองเฉพาะรายการที่ไม่โดนซ่อน
         let activeDb = db.filter(item => !hiddenIds.includes(item.id));
-        
-        // Logic: เอาเฉพาะเลขที่เอกสารล่าสุด (กรณีแก้ไขซ้ำ) เพื่อไปคำนวณ Dashboard
         const latestEntries = {};
-        activeDb.forEach(item => {
-            if (!latestEntries[item.no] || item.id > latestEntries[item.no].id) {
-                latestEntries[item.no] = item;
-            }
-        });
+        activeDb.forEach(item => { if (!latestEntries[item.no] || item.id > latestEntries[item.no].id) { latestEntries[item.no] = item; } });
 
         const filtered = activeDb.filter(r => r.no.toLowerCase().includes(s) || (r.custName && r.custName.toLowerCase().includes(s)));
         const body = document.getElementById('historyTableBody');
@@ -372,7 +364,6 @@
             </tr>`;
         }).join('');
 
-        // อัปเดตแผงควบคุม (เอาเฉพาะยอดล่าสุดของแต่ละเลขที่)
         let q = 0, i = 0, rc = 0, qc = 0, ic = 0, rcc = 0;
         Object.values(latestEntries).forEach(d => { 
             const v = parseFloat(d.total.replace(/,/g, '').replace(' บาท', '')) || 0; 
@@ -390,14 +381,8 @@
 
     function saveData() {
         const items = []; document.querySelectorAll('#itemRows tr').forEach(r => { items.push({ name: r.querySelector('.in-item').value, price: r.querySelector('.in-price').value, qty: r.querySelector('.in-qty').value, unit: r.querySelector('.in-unit').value, unitLabel: r.querySelector('.in-unit-label').value }); });
-        
-        // ตรวจสอบว่าเป็นการแก้ไขรายการเดิมหรือไม่
         const editId = document.getElementById('editingRecordId').value;
-        let editCount = 0;
-        if(editId) {
-            const oldRecord = db.find(x => x.id == editId);
-            editCount = (oldRecord && oldRecord.editCount ? oldRecord.editCount : 0) + 1;
-        }
+        let editCount = 0; if(editId) { const oldRecord = db.find(x => x.id == editId); editCount = (oldRecord && oldRecord.editCount ? oldRecord.editCount : 0) + 1; }
 
         const record = { 
             id: Date.now(), timestamp: new Date().toLocaleString('th-TH'), no: document.getElementById('inNo').value, date: document.getElementById('inDate').value, 
@@ -406,16 +391,11 @@
             total: document.getElementById('liveTotal').innerText + " บาท", type: document.getElementById('docType').value, items, editCount,
             bank: { name: document.getElementById('bankName').value, acc: document.getElementById('bankAccName').value, type: document.getElementById('bankType').value, no: document.getElementById('bankNo').value } 
         };
-        
-        // ถ้าเป็นการแก้ไข ให้ซ่อนรายการเก่า (เพื่อให้ Dashboard คำนวณถูก)
-        if(editId) {
-            hiddenIds.push(parseInt(editId));
-            localStorage.setItem(HIDDEN_KEY, JSON.stringify(hiddenIds));
-        }
-
+        if(editId) { hiddenIds.push(parseInt(editId)); localStorage.setItem(HIDDEN_KEY, JSON.stringify(hiddenIds)); }
         syncToCloud(record); alert("บันทึกข้อมูลเรียบร้อยแล้ว"); location.reload();
     }
 
+    // ฟังก์ชันที่ได้รับการแก้ไขให้เสถียรกว่าเดิม
     function loadRecordById(id) {
         const r = db.find(x => x.id === id); if(!r) return; 
         document.getElementById('editingRecordId').value = r.id;
@@ -424,16 +404,16 @@
         document.getElementById('custName').value = r.custName; 
         document.getElementById('custAddr').value = r.custAddr; 
         document.getElementById('custTax').value = r.custTax || "";
-        
-        // จุดที่แก้ไข: ดึงส่วนลดกลับมาใส่ในช่อง input เสมอ
         document.getElementById('inDiscount').value = parseFloat(r.disc) || 0;
-        
         document.getElementById('bankName').value = r.bank.name; 
         document.getElementById('bankAccName').value = r.bank.acc; 
         document.getElementById('bankType').value = r.bank.type; 
         document.getElementById('bankNo').value = r.bank.no;
         
+        // ล้างแถวเก่าออกให้หมดก่อน
         document.getElementById('itemRows').innerHTML = ""; 
+        
+        // สร้างแถวสินค้าใหม่ทั้งหมด
         r.items.forEach(it => { 
             addRow(); 
             const last = document.getElementById('itemRows').lastElementChild; 
@@ -446,7 +426,9 @@
             last.querySelector('.line-total-val').innerText = lineTotal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
         });
         
-        updatePreview(); window.scrollTo({ top: 0, behavior: 'smooth' });
+        // บังคับให้ระบบคำนวณสรุปยอดอีกครั้งหลังจากวาดแถวเสร็จ (Wrap ใน setTimeout เพื่อความชัวร์)
+        setTimeout(() => { updatePreview(); }, 50);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function deleteRecord(id) {
@@ -490,7 +472,7 @@
     function quickPrintById(id, type) { const r = db.find(x => x.id === id); if(!r) return; renderA4Data(r, type); setTimeout(() => window.print(), 500); }
     function exportData() { const b = new Blob([JSON.stringify({ history: db, customers, banks }, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = "TTI_Backup.json"; a.click(); }
     function importData(e) { const reader = new FileReader(); reader.onload = (f) => { const d = JSON.parse(f.target.result); localStorage.setItem(DB_KEY, JSON.stringify(d.history)); location.reload(); }; reader.readAsText(e.target.files[0]); }
-    function sendToCustomerEmail() { alert("ฟังชั่นส่งเมลจะถูกพัฒนาในลำดับถัดไป"); }
+    function sendToCustomerEmail() { alert("ฟังก์ชันส่งเมลจะถูกพัฒนาในลำดับถัดไป"); }
 
     window.onload = () => { document.getElementById('inDate').value = new Date().toLocaleDateString('th-TH'); addRow(); loadDataFromCloud(); };
 </script>
