@@ -241,24 +241,13 @@
     let hiddenIds = JSON.parse(localStorage.getItem(HIDDEN_KEY) || '[]');
     let currentViewingId = null;
 
-    // ฟังก์ชันซิงค์และรอผลลัพธ์จาก Cloud อย่างสมบูรณ์
     async function syncToCloud(payload) {
         if(!SCRIPT_URL) return;
         document.getElementById('syncStatus').innerText = "⏳ กำลังบันทึกลงคลาวด์...";
         try { 
-            const resp = await fetch(SCRIPT_URL, { 
-                method: "POST", 
-                headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-                body: JSON.stringify(payload) 
-            }); 
-            if(resp.ok) {
-                document.getElementById('syncStatus').innerText = "✅ บันทึกสำเร็จ";
-                return true;
-            }
-        } catch(e) { 
-            console.error(e); 
-            document.getElementById('syncStatus').innerText = "❌ ซิงค์ล้มเหลว";
-        }
+            const resp = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) }); 
+            if(resp.ok) { document.getElementById('syncStatus').innerText = "✅ บันทึกสำเร็จ"; return true; }
+        } catch(e) { console.error(e); document.getElementById('syncStatus').innerText = "❌ ซิงค์ล้มเหลว"; }
         return false;
     }
 
@@ -272,9 +261,7 @@
                 db = cloud.history || [];
                 customers = cloud.customers || [];
                 banks = cloud.banks || [];
-                updateCustomerDropdown(); 
-                updateBankDropdown(); 
-                renderHistory();
+                updateCustomerDropdown(); updateBankDropdown(); renderHistory();
                 document.getElementById('syncStatus').innerText = "✅ ซิงค์ล่าสุดเมื่อ " + new Date().toLocaleTimeString();
             }
         } catch(e) { console.error(e); }
@@ -284,7 +271,7 @@
         n = parseFloat(n) || 0; if (n === 0) return "ศูนย์บาทถ้วน";
         var s = n.toFixed(2).split("."); var B = s[0], St = s[1];
         function C(A) {
-            const TN = ["ศูนย์", "หนึ่ง", "สอง", "สาม", "สี่", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
+            const TN = ["ศูนย์", "หนึ่ง", "สอง", "สาม", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
             const TU = ["", "สิบ", "ร้อย", "พัน", "หมื่น", "แสน", "ล้าน"];
             var R = ""; var L = A.length;
             for (var i = 0; i < L; i++) {
@@ -302,7 +289,9 @@
     }
 
     function updatePreview() {
-        if (currentViewingId) return;
+        // เงื่อนไขสำคัญ: ถ้ากำลัง ดู (Preview) อยู่ จะไม่ให้เขียนทับข้อมูล แต่ถ้ากำลัง แก้ ข้อมูลจะคำนวณปกติ
+        if (currentViewingId) return; 
+        
         document.getElementById('viewTemplate').src = document.getElementById('docType').value;
         document.getElementById('outDate').innerText = document.getElementById('inDate').value;
         document.getElementById('outNo').innerText = document.getElementById('inNo').value;
@@ -327,13 +316,7 @@
             subtotal += total;
             if (lTotals[i]) lTotals[i].innerText = total.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
             if (item.value || p > 0) {
-                htmlItems += `
-                <div class="item-row-print">
-                    <div class="c-desc">${i + 1}. ${item.value}</div>
-                    <div class="c-uprice">${p.toLocaleString()} /${labels[i].value}</div>
-                    <div class="c-qty">${q} ${units[i].value}</div>
-                    <div class="c-total">${total.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
-                </div>`;
+                htmlItems += `<div class="item-row-print"><div class="c-desc">${i + 1}. ${item.value}</div><div class="c-uprice">${p.toLocaleString()} /${labels[i].value}</div><div class="c-qty">${q} ${units[i].value}</div><div class="c-total">${total.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</div></div>`;
             }
         });
 
@@ -356,49 +339,21 @@
         document.getElementById('outTax').innerText = taxVal.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
         document.getElementById('outTotal').innerText = grandTotal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + " บาท";
         document.getElementById('outThaiBaht').innerText = "(" + bahtStr + ")";
-        document.getElementById('outBankInfo').innerHTML = `${document.getElementById('bankName').value}<br>${document.getElementById('bankAccName').value}<br>${document.getElementById('bankType').value}<br>${document.getElementById('bankNo').value}`;
     }
 
     function addRow() {
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td class="row-no"></td>
-            <td><input type="text" class="form-control form-control-sm in-item"></td>
-            <td>
-                <div class="input-group input-group-sm">
-                    <input type="number" class="form-control in-price">
-                    <span class="input-group-text">/</span>
-                    <select class="form-select in-unit-label">
-                        <option value="ชิ้น">ชิ้น</option><option value="กรัม">กรัม</option><option value="กิโลกรัม">กิโลกรัม</option>
-                        <option value="ถุง">ถุง</option><option value="ขวด">ขวด</option><option value="ตัน">ตัน</option>
-                        <option value="ซอง">ซอง</option><option value="กล่อง">กล่อง</option><option value="ลัง">ลัง</option>
-                    </select>
-                </div>
-            </td>
-            <td><input type="number" class="form-control form-control-sm in-qty"></td>
-            <td>
-                <select class="form-select form-select-sm in-unit">
-                    <option value="ชิ้น">ชิ้น</option><option value="กรัม">กรัม</option><option value="กิโลกรัม">กิโลกรัม</option>
-                    <option value="ถุง">ถุง</option><option value="ขวด">ขวด</option><option value="ตัน">ตัน</option>
-                    <option value="ซอง">ซอง</option><option value="กล่อง">กล่อง</option><option value="ลัง">ลัง</option>
-                </select>
-            </td>
-            <td class="text-end fw-bold"><span class="line-total-val">0.00</span></td>
-            <td class="text-center"><button class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove(); updatePreview(); updateRowNumbers();">×</button></td>`;
+        tr.innerHTML = `<td class="row-no"></td><td><input type="text" class="form-control form-control-sm in-item"></td><td><div class="input-group input-group-sm"><input type="number" class="form-control in-price"><span class="input-group-text">/</span><select class="form-select in-unit-label"><option value="ชิ้น">ชิ้น</option><option value="กรัม">กรัม</option><option value="กิโลกรัม">กิโลกรัม</option><option value="ถุง">ถุง</option><option value="ขวด">ขวด</option><option value="ตัน">ตัน</option><option value="ซอง">ซอง</option><option value="กล่อง">กล่อง</option><option value="ลัง">ลัง</option></select></div></td><td><input type="number" class="form-control form-control-sm in-qty"></td><td><select class="form-select form-select-sm in-unit"><option value="ชิ้น">ชิ้น</option><option value="กรัม">กรัม</option><option value="กิโลกรัม">กิโลกรัม</option><option value="ถุง">ถุง</option><option value="ขวด">ขวด</option><option value="ตัน">ตัน</option><option value="ซอง">ซอง</option><option value="กล่อง">กล่อง</option><option value="ลัง">ลัง</option></select></td><td class="text-end fw-bold"><span class="line-total-val">0.00</span></td><td class="text-center"><button class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove(); updatePreview(); updateRowNumbers();">×</button></td>`;
         document.getElementById('itemRows').appendChild(tr);
         updateRowNumbers();
     }
 
-    function updateRowNumbers() {
-        document.querySelectorAll('#itemRows tr').forEach((r, i) => r.querySelector('.row-no').innerText = i + 1);
-    }
+    function updateRowNumbers() { document.querySelectorAll('#itemRows tr').forEach((r, i) => r.querySelector('.row-no').innerText = i + 1); }
 
     document.getElementById('itemRows').addEventListener('input', (e) => {
         if (e.target.classList.contains('form-control') || e.target.tagName === 'SELECT') {
             const row = e.target.closest('tr');
-            if (e.target.classList.contains('in-unit-label')) {
-                row.querySelector('.in-unit').value = e.target.value;
-            }
+            if (e.target.classList.contains('in-unit-label')) { row.querySelector('.in-unit').value = e.target.value; }
             updatePreview();
         }
     });
@@ -408,27 +363,17 @@
         let activeDb = db.filter(item => !hiddenIds.includes(item.id));
         const latestEntries = {};
         activeDb.forEach(item => { if (!latestEntries[item.no] || item.id > latestEntries[item.no].id) { latestEntries[item.no] = item; } });
-
         const filtered = activeDb.filter(r => r.no.toLowerCase().includes(s) || (r.custName && r.custName.toLowerCase().includes(s)));
         const body = document.getElementById('historyTableBody');
         body.innerHTML = filtered.slice().reverse().map(r => {
             let editTag = r.editCount > 0 ? ` <span style="color:red; font-weight:bold;">(แก้ไขครั้งที่ ${r.editCount})</span>` : "";
-            return `<tr>
-                <td><strong>${r.no}</strong></td><td>${r.timestamp}</td><td>${r.custName}${editTag}</td><td class="text-primary fw-bold">${r.total}</td>
-                <td class="d-flex gap-1 justify-content-center">
-                    <button class="btn btn-info btn-sm py-0 text-white" onclick="viewRecordById(${r.id})">👁️</button>
-                    <button class="btn btn-warning btn-sm py-0" onclick="loadRecordById(${r.id})">แก้</button>
-                    <button class="btn btn-danger btn-sm py-0" onclick="deleteRecord(${r.id})">🗑️</button>
-                </td>
-            </tr>`;
+            return `<tr><td><strong>${r.no}</strong></td><td>${r.timestamp}</td><td>${r.custName}${editTag}</td><td class="text-primary fw-bold">${r.total}</td><td class="d-flex gap-1 justify-content-center"><button class="btn btn-info btn-sm py-0 text-white" onclick="viewRecordById(${r.id})">👁️</button><button class="btn btn-warning btn-sm py-0" onclick="loadRecordById(${r.id})">แก้</button><button class="btn btn-danger btn-sm py-0" onclick="deleteRecord(${r.id})">🗑️</button></td></tr>`;
         }).join('');
-
+        
         let q = 0, i = 0, rc = 0, qc = 0, ic = 0, rcc = 0;
         Object.values(latestEntries).forEach(d => { 
             const v = parseFloat(d.total.replace(/,/g, '').replace(' บาท', '')) || 0; 
-            if(d.type === 'Quatation.png') { q += v; qc++; }
-            else if(d.type === 'Delivery&invoice.png') { i += v; ic++; }
-            else if(d.type === 'Receipt.png') { rc += v; rcc++; }
+            if(d.type === 'Quatation.png') { q += v; qc++; } else if(d.type === 'Delivery&invoice.png') { i += v; ic++; } else if(d.type === 'Receipt.png') { rc += v; rcc++; }
         });
         document.getElementById('dashTotalQT').innerText = q.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
         document.getElementById('dashCountQT').innerText = qc + " รายการ";
@@ -438,81 +383,27 @@
         document.getElementById('dashCountRC').innerText = rcc + " รายการ";
     }
 
-    // แก้ไขฟังก์ชัน saveData: รอให้การบันทึกคลาวด์เสร็จสมบูรณ์ก่อนรีเฟรชประวัติ
     async function saveData() {
-        const btn = document.getElementById('btnMainSave');
-        btn.disabled = true;
-        
+        const btn = document.getElementById('btnMainSave'); btn.disabled = true;
         const items = [];
-        document.querySelectorAll('#itemRows tr').forEach(r => {
-            items.push({
-                name: r.querySelector('.in-item').value,
-                price: r.querySelector('.in-price').value,
-                qty: r.querySelector('.in-qty').value,
-                unit: r.querySelector('.in-unit').value,
-                unitLabel: r.querySelector('.in-unit-label').value
-            });
-        });
-
+        document.querySelectorAll('#itemRows tr').forEach(r => { items.push({ name: r.querySelector('.in-item').value, price: r.querySelector('.in-price').value, qty: r.querySelector('.in-qty').value, unit: r.querySelector('.in-unit').value, unitLabel: r.querySelector('.in-unit-label').value }); });
         const editId = document.getElementById('editingRecordId').value;
-        let editCount = 0;
-        if (editId) {
-            const oldRecord = db.find(x => x.id == editId);
-            editCount = (oldRecord && oldRecord.editCount ? oldRecord.editCount : 0) + 1;
-            hiddenIds.push(parseInt(editId));
-            localStorage.setItem(HIDDEN_KEY, JSON.stringify(hiddenIds));
-        }
-
-        const record = { 
-            id: Date.now(), 
-            timestamp: new Date().toLocaleString('th-TH'), 
-            no: document.getElementById('inNo').value, 
-            date: document.getElementById('inDate').value, 
-            custName: document.getElementById('custName').value, 
-            custAddr: document.getElementById('custAddr').value, 
-            custTax: document.getElementById('custTax').value,
-            subtotal: document.getElementById('liveSubtotal').innerText, 
-            disc: document.getElementById('inDiscount').value, 
-            taxRate: document.getElementById('inTaxRate').value,
-            taxVal: document.getElementById('liveTax').innerText, 
-            total: document.getElementById('liveTotal').innerText + " บาท", 
-            type: document.getElementById('docType').value, 
-            items, 
-            editCount,
-            bank: { 
-                name: document.getElementById('bankName').value, 
-                acc: document.getElementById('bankAccName').value, 
-                type: document.getElementById('bankType').value, 
-                no: document.getElementById('bankNo').value 
-            } 
-        };
-        
+        let editCount = 0; if (editId) { const oldRecord = db.find(x => x.id == editId); editCount = (oldRecord && oldRecord.editCount ? oldRecord.editCount : 0) + 1; hiddenIds.push(parseInt(editId)); localStorage.setItem(HIDDEN_KEY, JSON.stringify(hiddenIds)); }
+        const record = { id: Date.now(), timestamp: new Date().toLocaleString('th-TH'), no: document.getElementById('inNo').value, date: document.getElementById('inDate').value, custName: document.getElementById('custName').value, custAddr: document.getElementById('custAddr').value, custTax: document.getElementById('custTax').value, subtotal: document.getElementById('liveSubtotal').innerText, disc: document.getElementById('inDiscount').value, taxRate: document.getElementById('inTaxRate').value, taxVal: document.getElementById('liveTax').innerText, total: document.getElementById('liveTotal').innerText + " บาท", type: document.getElementById('docType').value, items, editCount, bank: { name: document.getElementById('bankName').value, acc: document.getElementById('bankAccName').value, type: document.getElementById('bankType').value, no: document.getElementById('bankNo').value } };
         const success = await syncToCloud(record);
-        if(success) {
-            alert("บันทึกข้อมูลสำเร็จ");
-            await loadDataFromCloud(); // โหลดข้อมูลใหม่มาอัปเดตประวัติทันทีโดยไม่ต้องรีเฟรชหน้า
-            resetFormOnly(); // ล้างฟอร์มโดยไม่ reload
-        }
+        if(success) { alert("บันทึกข้อมูลสำเร็จ"); await loadDataFromCloud(); resetFormOnly(); }
         btn.disabled = false;
     }
 
     function resetFormOnly() {
-        document.getElementById('editingRecordId').value = "";
-        document.getElementById('inNo').value = "";
-        document.getElementById('custName').value = "";
-        document.getElementById('custAddr').value = "";
-        document.getElementById('custTax').value = "";
-        document.getElementById('inDiscount').value = "0";
-        document.getElementById('itemRows').innerHTML = "";
-        addRow();
-        updatePreview();
+        document.getElementById('editingRecordId').value = ""; document.getElementById('inNo').value = ""; document.getElementById('custName').value = ""; document.getElementById('custAddr').value = ""; document.getElementById('custTax').value = ""; document.getElementById('inDiscount').value = "0"; document.getElementById('itemRows').innerHTML = ""; addRow(); updatePreview();
     }
 
-    // แก้ไขฟังก์ชัน loadRecordById: ใช้ระบบหน่วงเวลาแบบ Double Check เพื่อให้ราคาขึ้นแน่นอนในการกดครั้งแรก
+    // แก้ไข loadRecordById: บังคับปิด View Mode ทันทีที่กดแก้ และหน่วงเวลาคำนวณเงิน
     async function loadRecordById(id) {
-        const r = db.find(x => x.id === id);
-        if (!r) return;
+        closeViewMode(); // ล้างสถานะ "ดู" ออกไปก่อนเพื่อปลดล็อกฟังก์ชันคำนวณเงิน
         
+        const r = db.find(x => x.id === id); if (!r) return;
         document.getElementById('editingRecordId').value = r.id;
         document.getElementById('docType').value = r.type;
         document.getElementById('inNo').value = r.no;
@@ -522,15 +413,12 @@
         document.getElementById('custTax').value = r.custTax || "";
         document.getElementById('inDiscount').value = r.disc || 0;
         document.getElementById('inTaxRate').value = r.taxRate || 7;
-        
         document.getElementById('bankName').value = r.bank.name;
         document.getElementById('bankAccName').value = r.bank.acc;
         document.getElementById('bankType').value = r.bank.type;
         document.getElementById('bankNo').value = r.bank.no;
         
         document.getElementById('itemRows').innerHTML = "";
-        
-        // วาดแถวข้อมูลทีละรายการ
         for (const it of r.items) {
             addRow(); 
             const last = document.getElementById('itemRows').lastElementChild; 
@@ -541,77 +429,18 @@
             last.querySelector('.in-unit-label').value = it.unitLabel;
         }
         
-        // แก้ไขปัญหา "ราคาไม่ขึ้นในการกดครั้งแรก": 
-        // 1. สั่งคำนวณทันที 
-        updatePreview();
-        // 2. สั่งคำนวณซ้ำอีกครั้งหลังจากรอเบราว์เซอร์ Render เสร็จ (150ms)
-        setTimeout(() => {
-            updatePreview();
-        }, 150);
-
+        setTimeout(() => { updatePreview(); }, 200);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function deleteRecord(id) {
-        if(confirm("ลบประวัติรายการนี้ออกจากหน้าเพจ? (ไม่ลบคลาวด์)")) {
-            hiddenIds.push(id);
-            localStorage.setItem(HIDDEN_KEY, JSON.stringify(hiddenIds));
-            renderHistory();
-        }
-    }
-
-    function updateCustomerDropdown() {
-        const s = document.getElementById('custSelect');
-        s.innerHTML = '<option value="">-- รายชื่อที่บันทึกไว้ --</option>';
-        const uniqueCust = [...new Map(customers.map(item => [item.name, item])).values()];
-        uniqueCust.forEach((c, i) => s.innerHTML += `<option value="${i}">${c.name}</option>`);
-        customers = uniqueCust;
-    }
-    
-    function selectCustomer(i) {
-        if(i === "") return;
-        const c = customers[i];
-        document.getElementById('custName').value = c.name;
-        document.getElementById('custAddr').value = c.addr;
-        document.getElementById('custTax').value = c.tax || "";
-        updatePreview();
-    }
-    
-    function updateBankDropdown() {
-        const s = document.getElementById('bankSelect');
-        s.innerHTML = '<option value="">-- บัญชีที่บันทึกไว้ --</option>';
-        banks.forEach((b, i) => s.innerHTML += `<option value="${i}">${b.name}</option>`);
-    }
-    
-    function selectBank(i) {
-        if(i === "") return;
-        const b = banks[i];
-        document.getElementById('bankName').value = b.name;
-        document.getElementById('bankAccName').value = b.acc;
-        document.getElementById('bankType').value = b.type;
-        document.getElementById('bankNo').value = b.no;
-        updatePreview();
-    }
-
-    function viewRecordById(id) { 
-        currentViewingId = id; 
-        const r = db.find(x => x.id === id); 
-        if(!r) return; 
-        document.getElementById('viewModeController').style.display = 'flex'; 
-        renderA4Data(r, r.type); 
-        window.scrollTo({ top: document.querySelector('.preview-section').offsetTop, behavior: 'smooth' }); 
-    }
-    
-    function closeViewMode() { 
-        currentViewingId = null; 
-        document.getElementById('viewModeController').style.display = 'none'; 
-        updatePreview(); 
-    }
-    
-    function switchViewType(t) { 
-        const r = db.find(x => x.id === currentViewingId); 
-        if(r) renderA4Data(r, t); 
-    }
+    function deleteRecord(id) { if(confirm("ลบประวัติรายการนี้ออกจากหน้าเพจ?")) { hiddenIds.push(id); localStorage.setItem(HIDDEN_KEY, JSON.stringify(hiddenIds)); renderHistory(); } }
+    function updateCustomerDropdown() { const s = document.getElementById('custSelect'); s.innerHTML = '<option value="">-- รายชื่อที่บันทึกไว้ --</option>'; const uniqueCust = [...new Map(customers.map(item => [item.name, item])).values()]; uniqueCust.forEach((c, i) => s.innerHTML += `<option value="${i}">${c.name}</option>`); customers = uniqueCust; }
+    function selectCustomer(i) { if(i === "") return; const c = customers[i]; document.getElementById('custName').value = c.name; document.getElementById('custAddr').value = c.addr; document.getElementById('custTax').value = c.tax || ""; updatePreview(); }
+    function updateBankDropdown() { const s = document.getElementById('bankSelect'); s.innerHTML = '<option value="">-- บัญชีที่บันทึกไว้ --</option>'; banks.forEach((b, i) => s.innerHTML += `<option value="${i}">${b.name}</option>`); }
+    function selectBank(i) { if(i === "") return; const b = banks[i]; document.getElementById('bankName').value = b.name; document.getElementById('bankAccName').value = b.acc; document.getElementById('bankType').value = b.type; document.getElementById('bankNo').value = b.no; updatePreview(); }
+    function viewRecordById(id) { currentViewingId = id; const r = db.find(x => x.id === id); if(!r) return; document.getElementById('viewModeController').style.display = 'flex'; renderA4Data(r, r.type); window.scrollTo({ top: document.querySelector('.preview-section').offsetTop, behavior: 'smooth' }); }
+    function closeViewMode() { currentViewingId = null; document.getElementById('viewModeController').style.display = 'none'; updatePreview(); }
+    function switchViewType(t) { const r = db.find(x => x.id === currentViewingId); if(r) renderA4Data(r, t); }
     
     function renderA4Data(r, type) { 
         document.getElementById('viewTemplate').src = type; 
@@ -620,35 +449,19 @@
         document.getElementById('outCustName').innerText = r.custName; 
         document.getElementById('outCustAddr').innerText = r.custAddr; 
         document.getElementById('outCustTax').innerText = r.custTax ? "เลขผู้เสียภาษี " + r.custTax : "";
-        
-        let html = ''; 
-        let sub = 0;
+        let html = ''; let sub = 0;
         r.items.forEach((it, i) => { 
-            const p = parseFloat(it.price) || 0;
-            const q = parseFloat(it.qty) || 0;
-            const total = p * q;
-            sub += total;
-            html += `
-            <div class="item-row-print">
-                <div class="c-desc">${i+1}. ${it.name}</div>
-                <div class="c-uprice">${p.toLocaleString()} /${it.unitLabel}</div>
-                <div class="c-qty">${it.qty} ${it.unit}</div>
-                <div class="c-total">${total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-            </div>`; 
+            const p = parseFloat(it.price) || 0; const q = parseFloat(it.qty) || 0; const total = p * q; sub += total;
+            html += `<div class="item-row-print"><div class="c-desc">${i+1}. ${it.name}</div><div class="c-uprice">${p.toLocaleString()} /${it.unitLabel}</div><div class="c-qty">${it.qty} ${it.unit}</div><div class="c-total">${total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div></div>`; 
         });
-        
-        const disc = parseFloat(r.disc) || 0;
-        const tRate = parseFloat(r.taxRate) || 0;
-        const taxVal = (sub - disc) * (tRate / 100);
-        const totalFinal = sub - disc + taxVal;
-
+        const disc = parseFloat(r.disc) || 0; const tRate = parseFloat(r.taxRate) || 0; const taxVal = (sub - disc) * (tRate / 100); const totalFinal = sub - disc + taxVal;
         document.getElementById('outItemList').innerHTML = html;
         document.getElementById('outSubtotal').innerText = sub.toLocaleString(undefined, {minimumFractionDigits: 2}) + " บาท";
         document.getElementById('outDiscount').innerText = disc.toLocaleString(undefined, {minimumFractionDigits: 2}) + " บาท";
         document.getElementById('outTax').innerText = taxVal.toLocaleString(undefined, {minimumFractionDigits: 2}) + " บาท";
         document.getElementById('outTotal').innerText = totalFinal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " บาท";
         document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(totalFinal) + ")";
-        document.getElementById('outBankInfo').innerHTML = `${document.getElementById('bankName').value}<br>${document.getElementById('bankAccName').value}<br>${document.getElementById('bankType').value}<br>${document.getElementById('bankNo').value}`;
+        document.getElementById('outBankInfo').innerHTML = `${r.bank.name}<br>${r.bank.acc}<br>${r.bank.type}<br>${r.bank.no}`;
     }
     
     function resetForm() { location.reload(); }
@@ -660,11 +473,7 @@
     function importData(e) { const reader = new FileReader(); reader.onload = (f) => { const d = JSON.parse(f.target.result); db = d.history || []; renderHistory(); }; reader.readAsText(e.target.files[0]); }
     function sendToCustomerEmail() { alert("ฟังก์ชันส่งเมลจะถูกพัฒนาในลำดับถัดไป"); }
 
-    window.onload = () => { 
-        document.getElementById('inDate').value = new Date().toLocaleDateString('th-TH'); 
-        addRow(); 
-        loadDataFromCloud(); 
-    };
+    window.onload = () => { document.getElementById('inDate').value = new Date().toLocaleDateString('th-TH'); addRow(); loadDataFromCloud(); };
 </script>
 </body>
 </html>
