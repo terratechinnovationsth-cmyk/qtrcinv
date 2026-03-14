@@ -330,8 +330,9 @@
         const s = document.getElementById('custSelect');
         s.innerHTML = '<option value="">-- รายชื่อที่บันทึกไว้ --</option>';
         customers.forEach((c, i) => {
-            // ดึงเฉพาะชื่อ (คอลัมน์ A ในตรรกะข้อมูล) มาแสดงเท่านั้น
-            s.innerHTML += `<option value="${i}">${c.name}</option>`;
+            // ดึงชื่อลูกค้ามาจาก Property '.name' (ซึ่งเป็นคอลัมน์ A ในตรรกะข้อมูล Customers)
+            const displayName = c.name || "ไม่ระบุชื่อ";
+            s.innerHTML += `<option value="${i}">${displayName}</option>`;
         });
     }
 
@@ -339,8 +340,9 @@
         const s = document.getElementById('bankSelect');
         s.innerHTML = '<option value="">-- บัญชีที่บันทึกไว้ --</option>';
         banks.forEach((b, i) => {
-            // ดึงเฉพาะชื่อธนาคารมาแสดงเท่านั้น
-            s.innerHTML += `<option value="${i}">${b.name}</option>`;
+            // ดึงชื่อธนาคารมาจาก Property '.name' (ชื่อธนาคาร)
+            const displayName = b.name || "ไม่ระบุธนาคาร";
+            s.innerHTML += `<option value="${i}">${displayName}</option>`;
         });
     }
 
