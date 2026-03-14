@@ -87,7 +87,7 @@
             </div>
             <img src="whlogo.png" alt="Logo" class="logo-img">
         </div>
-        <div id="syncStatus" class="small mt-2" style="opacity: 0.8; font-weight: bold;">☁️ กำลังเชื่อมต่อคลาวด์...</div>
+        <div id="syncStatus" class="small mt-2" style="opacity: 0.8; font-weight: bold;">☁️ กำลังเริ่มการซิงค์ข้อมูล...</div>
     </div>
 </header>
 
@@ -254,11 +254,11 @@
     // --- Sync Functions ---
     async function syncToCloud(payload) {
         if(!SCRIPT_URL) return;
-        document.getElementById('syncStatus').innerText = "⏳ กำลังบันทึกไปคลาวด์...";
+        document.getElementById('syncStatus').innerText = "⏳ กำลังบันทึกข้อมูล...";
         try { 
             await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) }); 
             document.getElementById('syncStatus').innerText = "✅ ซิงค์สำเร็จ";
-        } catch(e) { document.getElementById('syncStatus').innerText = "❌ บันทึกล้มเหลว"; }
+        } catch(e) { document.getElementById('syncStatus').innerText = "❌ ผิดพลาด"; }
     }
 
     async function loadDataFromCloud() {
@@ -330,8 +330,9 @@
         const s = document.getElementById('custSelect');
         s.innerHTML = '<option value="">-- รายชื่อที่บันทึกไว้ --</option>';
         customers.forEach((c, i) => {
-            // ดึงมาแสดงเฉพาะชื่อ ไม่เอาข้อมูลอื่นมาเลอะเทอะ
-            s.innerHTML += `<option value="${i}">${c.name}</option>`;
+            // แก้ไข: แสดงเฉพาะชื่อลูกค้าเท่านั้น
+            const displayName = c.name || "ไม่มีชื่อ";
+            s.innerHTML += `<option value="${i}">${displayName}</option>`;
         });
     }
 
@@ -339,8 +340,9 @@
         const s = document.getElementById('bankSelect');
         s.innerHTML = '<option value="">-- บัญชีที่บันทึกไว้ --</option>';
         banks.forEach((b, i) => {
-            // ดึงมาแสดงเฉพาะชื่อธนาคารและเลขบัญชีให้ดูง่าย
-            s.innerHTML += `<option value="${i}">${b.name} (${b.no})</option>`;
+            // แก้ไข: แสดงเฉพาะชื่อธนาคารเท่านั้น
+            const displayName = b.name || "ไม่มีชื่อธนาคาร";
+            s.innerHTML += `<option value="${i}">${displayName}</option>`;
         });
     }
 
@@ -425,7 +427,12 @@
         document.getElementById('outTax').innerText = tax.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + " บาท";
         document.getElementById('outTotal').innerText = totalFinal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + " บาท";
         document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(totalFinal) + ")";
-        document.getElementById('outBankInfo').innerHTML = `${document.getElementById('bankName').value}<br>${document.getElementById('bankAccName').value}<br>${document.getElementById('bankNo').value}`;
+        const bk = { name: document.getElementById('bankName').value, acc: document.getElementById('bankAccName').value, type: document.getElementById('bankType').value, no: document.getElementById('bankNo').value };
+        document.getElementById('outBankInfo').innerHTML = `${bk.name}<br>${bk.acc}<br>${bk.type}<br>${bk.no}`;
+        const terms = document.querySelectorAll('.term-input');
+        let t1 = '', t2 = '';
+        terms.forEach((t, i) => { if(t.value) { if(i<5) t1 += `• ${t.value}<br>`; else t2 += `• ${t.value}<br>`; } });
+        document.getElementById('outTerms').innerHTML = `<div style="width:50%">${t1}</div><div style="width:50%">${t2}</div>`;
     }
 
     function addRow() {
@@ -450,7 +457,7 @@
 
     function renderHistory() {
         const s = document.getElementById('historySearch').value.toLowerCase();
-        let filtered = db.filter(r => r.no.toLowerCase().includes(s) || r.custName.toLowerCase().includes(s));
+        let filtered = db.filter(r => r.no.toLowerCase().includes(s) || (r.custName && r.custName.toLowerCase().includes(s)));
         const body = document.getElementById('historyTableBody');
         body.innerHTML = filtered.slice().reverse().map(r => `<tr><td><strong>${r.no}</strong></td><td>${r.timestamp}</td><td>${r.custName}${r.isEdited?' <span style="color:red">(แก้ไข)</span>':''}</td><td class="text-primary fw-bold">${r.total}</td><td><button class="btn btn-xs btn-outline-dark py-0" style="font-size:10px" onclick="quickPrintById(${r.id}, 'Quatation.png')">QT</button><button class="btn btn-xs btn-outline-dark py-0" style="font-size:10px" onclick="quickPrintById(${r.id}, 'Receipt.png')">RC</button><button class="btn btn-xs btn-outline-dark py-0" style="font-size:10px" onclick="quickPrintById(${r.id}, 'Delivery&invoice.png')">INV</button></td><td class="d-flex gap-1 justify-content-center"><button class="btn btn-info btn-sm py-0 text-white" onclick="viewRecordById(${r.id})">👁️</button><button class="btn btn-warning btn-sm py-0" onclick="loadRecordById(${r.id})">แก้</button><button class="btn btn-danger btn-sm py-0" onclick="deleteRecord(${r.id})">🗑️</button></td></tr>`).join('');
         let q = 0, i = 0, rc = 0; db.forEach(d => { const v = parseFloat(d.total.replace(/,/g, '')); if(d.type === 'Quatation.png') q += v; else if(d.type === 'Delivery&invoice.png') i += v; else rc += v; });
@@ -468,7 +475,7 @@
         document.getElementById('outCustTax').innerText = r.custTax ? "เลขประจำตัวผู้เสียภาษี " + r.custTax : "";
         let html = ''; r.items.forEach((it, i) => { const l = parseFloat(it.price) * parseFloat(it.qty); html += `<div class="item-row-print"><div class="c-desc">${i+1}. ${it.name}</div><div class="c-uprice">${parseFloat(it.price).toLocaleString()} /${it.unitLabel}</div><div class="c-qty">${it.qty} ${it.unit}</div><div class="c-total">${l.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})} บาท</div></div>`; });
         document.getElementById('outItemList').innerHTML = html;
-        document.getElementById('outSubtotal').innerText = (parseFloat(r.subtotal)||0).toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท"; 
+        document.getElementById('outSubtotal').innerText = (parseFloat(r.subtotal)||0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + " บาท"; 
         document.getElementById('outTotal').innerText = r.total; document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(r.total) + ")";
         document.getElementById('outBankInfo').innerHTML = `${r.bank.name}<br>${r.bank.acc}<br>${r.bank.no}`;
     }
