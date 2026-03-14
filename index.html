@@ -94,7 +94,7 @@
 <div class="no-print-section no-print">
     <div class="container">
         <div class="backup-panel d-flex flex-column flex-md-row justify-content-between align-items-center shadow-sm gap-2">
-            <div><span class="fw-bold text-secondary mr-3">🗄️ ฐานข้อมูลกลาง:</span><small class="text-muted ml-2">(ข้อมูลซิงค์ตรงกันทุกอุปกรณ์ - ลบประวัติจะไม่ลบคลาวด์)</small></div>
+            <div><span class="fw-bold text-secondary mr-3">🗄️ ฐานข้อมูลกลาง:</span><small class="text-muted ml-2">(ข้อมูลซิงค์ตรงกันทุกอุปกรณ์)</small></div>
             <div class="d-flex gap-2 w-100 w-md-auto">
                 <button class="btn btn-outline-secondary btn-sm flex-fill" onclick="exportData()">📤 Export</button>
                 <button class="btn btn-outline-primary btn-sm flex-fill" onclick="document.getElementById('importFile').click()">📥 Import</button>
@@ -174,7 +174,7 @@
         <div class="thai-baht-live" id="liveThaiBaht">ตัวอักษร: (ศูนย์บาทถ้วน)</div>
 
         <div class="mt-3 no-print">
-            <button class="btn btn-success btn-complete-save w-100 shadow fw-bold" onclick="saveData()">💾 บันทึกรายการ</button>
+            <button class="btn btn-success btn-complete-save w-100 shadow fw-bold" id="btnMainSave" onclick="saveData()">💾 บันทึกรายการ</button>
         </div>
     </div>
 </div>
@@ -232,29 +232,39 @@
 <footer class="main-footer no-print"><p>© 2026 บริษัทเทอร่าเทค อินโนเวชั่นส์ จำกัด</p></footer>
 
 <script>
-    const DB_KEY = 'TTI_GLOBAL_HISTORY';
-    const HIDDEN_KEY = 'TTI_HIDDEN_LOGS';
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3kfhMsrSOqe_CZfEzj1BF-Cg2HgBgTVSp5x7K4efj2LIbst44qB1L_zrrFClqj58J8w/exec";
-
+    const HIDDEN_KEY = 'TTI_HIDDEN_LOGS';
+    
     let db = [];
     let customers = [];
     let banks = [];
     let hiddenIds = JSON.parse(localStorage.getItem(HIDDEN_KEY) || '[]');
     let currentViewingId = null;
 
+    // ฟังก์ชันซิงค์และรอผลลัพธ์จาก Cloud อย่างสมบูรณ์
     async function syncToCloud(payload) {
         if(!SCRIPT_URL) return;
-        document.getElementById('syncStatus').innerText = "⏳ กำลังซิงค์...";
+        document.getElementById('syncStatus').innerText = "⏳ กำลังบันทึกลงคลาวด์...";
         try { 
-            await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) }); 
-            document.getElementById('syncStatus').innerText = "✅ ซิงค์สำเร็จ";
-            loadDataFromCloud();
-        } catch(e) { console.error(e); }
+            const resp = await fetch(SCRIPT_URL, { 
+                method: "POST", 
+                headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+                body: JSON.stringify(payload) 
+            }); 
+            if(resp.ok) {
+                document.getElementById('syncStatus').innerText = "✅ บันทึกสำเร็จ";
+                return true;
+            }
+        } catch(e) { 
+            console.error(e); 
+            document.getElementById('syncStatus').innerText = "❌ ซิงค์ล้มเหลว";
+        }
+        return false;
     }
 
     async function loadDataFromCloud() {
         if(!SCRIPT_URL) return;
-        document.getElementById('syncStatus').innerText = "⏳ ดึงข้อมูลล่าสุด...";
+        document.getElementById('syncStatus').innerText = "⏳ กำลังดึงข้อมูลล่าสุด...";
         try {
             const response = await fetch(SCRIPT_URL);
             const cloud = await response.json();
@@ -262,8 +272,10 @@
                 db = cloud.history || [];
                 customers = cloud.customers || [];
                 banks = cloud.banks || [];
-                updateCustomerDropdown(); updateBankDropdown(); renderHistory();
-                document.getElementById('syncStatus').innerText = "✅ ซิงค์สำเร็จ";
+                updateCustomerDropdown(); 
+                updateBankDropdown(); 
+                renderHistory();
+                document.getElementById('syncStatus').innerText = "✅ ซิงค์ล่าสุดเมื่อ " + new Date().toLocaleTimeString();
             }
         } catch(e) { console.error(e); }
     }
@@ -314,7 +326,6 @@
             const total = p * q;
             subtotal += total;
             if (lTotals[i]) lTotals[i].innerText = total.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
-
             if (item.value || p > 0) {
                 htmlItems += `
                 <div class="item-row-print">
@@ -427,7 +438,11 @@
         document.getElementById('dashCountRC').innerText = rcc + " รายการ";
     }
 
-    function saveData() {
+    // แก้ไขฟังก์ชัน saveData: รอให้การบันทึกคลาวด์เสร็จสมบูรณ์ก่อนรีเฟรชประวัติ
+    async function saveData() {
+        const btn = document.getElementById('btnMainSave');
+        btn.disabled = true;
+        
         const items = [];
         document.querySelectorAll('#itemRows tr').forEach(r => {
             items.push({
@@ -472,12 +487,28 @@
             } 
         };
         
-        syncToCloud(record);
-        alert("บันทึกข้อมูลสำเร็จ");
-        location.reload();
+        const success = await syncToCloud(record);
+        if(success) {
+            alert("บันทึกข้อมูลสำเร็จ");
+            await loadDataFromCloud(); // โหลดข้อมูลใหม่มาอัปเดตประวัติทันทีโดยไม่ต้องรีเฟรชหน้า
+            resetFormOnly(); // ล้างฟอร์มโดยไม่ reload
+        }
+        btn.disabled = false;
     }
 
-    // แก้ไข loadRecordById ให้คำนวณเงินอัตโนมัติ 100%
+    function resetFormOnly() {
+        document.getElementById('editingRecordId').value = "";
+        document.getElementById('inNo').value = "";
+        document.getElementById('custName').value = "";
+        document.getElementById('custAddr').value = "";
+        document.getElementById('custTax').value = "";
+        document.getElementById('inDiscount').value = "0";
+        document.getElementById('itemRows').innerHTML = "";
+        addRow();
+        updatePreview();
+    }
+
+    // แก้ไขฟังก์ชัน loadRecordById: ใช้ระบบหน่วงเวลาแบบ Double Check เพื่อให้ราคาขึ้นแน่นอนในการกดครั้งแรก
     async function loadRecordById(id) {
         const r = db.find(x => x.id === id);
         if (!r) return;
@@ -499,8 +530,8 @@
         
         document.getElementById('itemRows').innerHTML = "";
         
-        // 1. วาดแถวข้อมูล
-        r.items.forEach(it => {
+        // วาดแถวข้อมูลทีละรายการ
+        for (const it of r.items) {
             addRow(); 
             const last = document.getElementById('itemRows').lastElementChild; 
             last.querySelector('.in-item').value = it.name; 
@@ -508,10 +539,15 @@
             last.querySelector('.in-qty').value = it.qty; 
             last.querySelector('.in-unit').value = it.unit; 
             last.querySelector('.in-unit-label').value = it.unitLabel;
-        });
+        }
         
-        // 2. กระตุ้นระบบคำนวณเงินทันที
+        // แก้ไขปัญหา "ราคาไม่ขึ้นในการกดครั้งแรก": 
+        // 1. สั่งคำนวณทันที 
         updatePreview();
+        // 2. สั่งคำนวณซ้ำอีกครั้งหลังจากรอเบราว์เซอร์ Render เสร็จ (150ms)
+        setTimeout(() => {
+            updatePreview();
+        }, 150);
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -520,7 +556,6 @@
         if(confirm("ลบประวัติรายการนี้ออกจากหน้าเพจ? (ไม่ลบคลาวด์)")) {
             hiddenIds.push(id);
             localStorage.setItem(HIDDEN_KEY, JSON.stringify(hiddenIds));
-            db = db.filter(item => item.id !== id);
             renderHistory();
         }
     }
@@ -613,7 +648,7 @@
         document.getElementById('outTax').innerText = taxVal.toLocaleString(undefined, {minimumFractionDigits: 2}) + " บาท";
         document.getElementById('outTotal').innerText = totalFinal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " บาท";
         document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(totalFinal) + ")";
-        document.getElementById('outBankInfo').innerHTML = `${r.bank.name}<br>${r.bank.acc}<br>${r.bank.type}<br>${r.bank.no}`;
+        document.getElementById('outBankInfo').innerHTML = `${document.getElementById('bankName').value}<br>${document.getElementById('bankAccName').value}<br>${document.getElementById('bankType').value}<br>${document.getElementById('bankNo').value}`;
     }
     
     function resetForm() { location.reload(); }
@@ -622,7 +657,7 @@
     function deleteCustomerFromDb() { const idx = document.getElementById('custSelect').value; if(idx!=="" && confirm("ลบ?")) { hiddenIds.push(customers[idx].name); localStorage.setItem(HIDDEN_KEY, JSON.stringify(hiddenIds)); customers.splice(idx,1); updateCustomerDropdown(); document.getElementById('custName').value = ""; } }
     function deleteBankFromDb() { const idx = document.getElementById('bankSelect').value; if(idx!=="" && confirm("ลบ?")) { hiddenIds.push(banks[idx].no); localStorage.setItem(HIDDEN_KEY, JSON.stringify(hiddenIds)); banks.splice(idx,1); updateBankDropdown(); document.getElementById('bankNo').value = ""; } }
     function exportData() { const b = new Blob([JSON.stringify({ history: db, customers, banks }, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = "TTI_Backup.json"; a.click(); }
-    function importData(e) { const reader = new FileReader(); reader.onload = (f) => { const d = JSON.parse(f.target.result); localStorage.setItem(DB_KEY, JSON.stringify(d.history)); location.reload(); }; reader.readAsText(e.target.files[0]); }
+    function importData(e) { const reader = new FileReader(); reader.onload = (f) => { const d = JSON.parse(f.target.result); db = d.history || []; renderHistory(); }; reader.readAsText(e.target.files[0]); }
     function sendToCustomerEmail() { alert("ฟังก์ชันส่งเมลจะถูกพัฒนาในลำดับถัดไป"); }
 
     window.onload = () => { 
