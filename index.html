@@ -291,7 +291,7 @@
         var res = C(B) + "บาท"; if (St == "00") res += "ถ้วน"; else res += C(St) + "สตางค์"; return res;
     }
 
-    // แก้ไข: ฟังก์ชัน updatePreview ให้สั่งวาดตัวเลขลงในช่องรายการสินค้าด้วย
+    // ฟังก์ชัน updatePreview: หัวใจสำคัญของการคำนวณ
     function updatePreview() {
         if (currentViewingId) return;
         document.getElementById('viewTemplate').src = document.getElementById('docType').value;
@@ -317,19 +317,19 @@
         const totalFinal = sub - disc + taxValCalc;
         const finalBahtStr = ThaiBaht(totalFinal);
 
-        // วาดตัวเลขลงในช่องรายการสินค้า (สรุปรายการ)
+        // บังคับเขียนตัวเลขลงในช่องสรุปรายการรายละเอียดสินค้า
         document.getElementById('liveSubtotal').innerText = sub.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
         document.getElementById('liveDiscountDisplay').innerText = disc.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
         document.getElementById('liveTax').innerText = taxValCalc.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
         document.getElementById('liveTotal').innerText = totalFinal.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
         document.getElementById('liveThaiBaht').innerText = "ตัวอักษร: (" + finalBahtStr + ")";
         
-        // วาดตัวเลขลงในใบพรีวิว A4
+        // บังคับเขียนลงในใบ A4
         document.getElementById('outItemList').innerHTML = html;
-        document.getElementById('outSubtotal').innerText = sub.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
-        document.getElementById('outDiscount').innerText = disc.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
-        document.getElementById('outTax').innerText = taxValCalc.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
-        document.getElementById('outTotal').innerText = totalFinal.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
+        document.getElementById('outSubtotal').innerText = sub.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + " บาท";
+        document.getElementById('outDiscount').innerText = disc.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + " บาท";
+        document.getElementById('outTax').innerText = taxValCalc.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + " บาท";
+        document.getElementById('outTotal').innerText = totalFinal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + " บาท";
         document.getElementById('outThaiBaht').innerText = "(" + finalBahtStr + ")";
         document.getElementById('outBankInfo').innerHTML = `${document.getElementById('bankName').value}<br>${document.getElementById('bankAccName').value}<br>${document.getElementById('bankType').value}<br>${document.getElementById('bankNo').value}`;
     }
@@ -398,6 +398,7 @@
         syncToCloud(record); alert("บันทึกข้อมูลเรียบร้อยแล้ว"); location.reload();
     }
 
+    // ฟังก์ชัน loadRecordById: แก้ไขให้ทำงานแบบ Sync ข้อมูลที่แน่นอน
     async function loadRecordById(id) {
         const r = db.find(x => x.id === id); if(!r) return; 
         document.getElementById('editingRecordId').value = r.id;
@@ -414,7 +415,8 @@
         
         document.getElementById('itemRows').innerHTML = ""; 
         
-        const rowPromises = r.items.map(async (it) => {
+        // บังคับการโหลดแถวข้อมูลแบบทีละรายการ
+        for (const it of r.items) {
             addRow(); 
             const last = document.getElementById('itemRows').lastElementChild; 
             last.querySelector('.in-item').value = it.name; 
@@ -424,13 +426,12 @@
             last.querySelector('.in-unit-label').value = it.unitLabel;
             const lineTotal = (parseFloat(it.price) || 0) * (parseFloat(it.qty) || 0);
             last.querySelector('.line-total-val').innerText = lineTotal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
-        });
-
-        await Promise.all(rowPromises);
+        }
         
-        requestAnimationFrame(() => {
+        // บังคับให้หน้าเว็บประมวลผลให้จบก่อนสั่งคำนวณเงิน
+        setTimeout(() => {
             updatePreview();
-        });
+        }, 100);
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -460,7 +461,7 @@
         let html = ''; r.items.forEach((it, i) => { html += `<div class="item-row-print"><div class="c-desc">${i+1}. ${it.name}</div><div class="c-uprice">${parseFloat(it.price).toLocaleString()} /${it.unitLabel}</div><div class="c-qty">${it.qty} ${it.unit}</div><div class="c-total">${(it.price*it.qty).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</div></div>`; });
         document.getElementById('outItemList').innerHTML = html;
         document.getElementById('outSubtotal').innerText = r.subtotal + " บาท";
-        document.getElementById('outDiscount').innerText = (parseFloat(r.disc)||0).toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
+        document.getElementById('outDiscount').innerText = (parseFloat(r.disc)||0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + " บาท";
         document.getElementById('outTax').innerText = r.taxVal + " บาท";
         document.getElementById('outTotal').innerText = r.total; 
         const totalNum = parseFloat(r.total.replace(/,/g, '').replace(' บาท', ''));
