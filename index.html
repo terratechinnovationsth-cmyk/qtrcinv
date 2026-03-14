@@ -267,17 +267,11 @@
         } catch(e) { console.error(e); }
     }
 
-    // ฟังก์ชันอ่านตัวเลขเป็นภาษาไทย (แก้ไขลำดับ logic เล็กน้อยเพื่อความแม่นยำ)
     function ThaiBaht(n) {
-        n = parseFloat(n) || 0; 
-        n = Math.round(n * 100) / 100; // ป้องกันปัญหาทศนิยมเพี้ยน
-        if (n === 0) return "ศูนย์บาทถ้วน";
-        
-        var s = n.toFixed(2).split("."); 
-        var B = s[0], St = s[1];
-        
+        n = parseFloat(n) || 0; n = Math.round(n * 100) / 100; if (n === 0) return "ศูนย์บาทถ้วน";
+        var s = n.toFixed(2).split("."); var B = s[0], St = s[1];
         function C(A) {
-            const TN = ["ศูนย์", "หนึ่ง", "สอง", "สาม", "สี่", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
+            const TN = ["ศูนย์", "หนึ่ง", "สอง", "สาม", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
             const TU = ["", "สิบ", "ร้อย", "พัน", "หมื่น", "แสน", "ล้าน"];
             var R = ""; var L = A.length;
             for (var i = 0; i < L; i++) {
@@ -291,16 +285,11 @@
                 if (p > 0 && (p % 6) == 0) R += "ล้าน";
             } return R;
         }
-        
-        var res = "";
-        if (B !== "0") res += C(B) + "บาท";
-        if (St === "00") res += "ถ้วน"; else res += C(St) + "สตางค์"; 
-        return res;
+        var res = ""; if (B !== "0") res += C(B) + "บาท"; if (St === "00") res += "ถ้วน"; else res += C(St) + "สตางค์"; return res;
     }
 
     function updatePreview() {
         if (currentViewingId) return; 
-        
         document.getElementById('viewTemplate').src = document.getElementById('docType').value;
         document.getElementById('outDate').innerText = document.getElementById('inDate').value;
         document.getElementById('outNo').innerText = document.getElementById('inNo').value;
@@ -319,10 +308,7 @@
         const lTotals = document.querySelectorAll('.line-total-val');
 
         items.forEach((item, i) => {
-            const p = parseFloat(prices[i].value) || 0;
-            const q = parseFloat(qtys[i].value) || 0;
-            const total = p * q;
-            subtotal += total;
+            const p = parseFloat(prices[i].value) || 0; const q = parseFloat(qtys[i].value) || 0; const total = p * q; subtotal += total;
             if (lTotals[i]) lTotals[i].innerText = total.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
             if (item.value || p > 0) {
                 htmlItems += `<div class="item-row-print"><div class="c-desc">${i + 1}. ${item.value}</div><div class="c-uprice">${p.toLocaleString()} /${labels[i].value}</div><div class="c-qty">${q} ${units[i].value}</div><div class="c-total">${total.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</div></div>`;
@@ -334,8 +320,6 @@
         const subAfterDisc = subtotal - discount;
         const taxVal = subAfterDisc * (taxRate / 100);
         const grandTotal = subAfterDisc + taxVal;
-        
-        // แก้ไขจุดสำคัญ: ส่ง grandTotal เข้า ThaiBaht เพื่อให้ตัวอักษรตรงกับเลขรวมเงินสุทธิ
         const bahtStr = ThaiBaht(grandTotal);
 
         document.getElementById('liveSubtotal').innerText = subtotal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
@@ -369,20 +353,37 @@
         }
     });
 
+    // แก้ไขระบบแสดงประวัติ: โชว์ทุกเวอร์ชันของการแก้ไข
     function renderHistory() {
         const s = document.getElementById('historySearch').value.toLowerCase();
+        // กรองรายการที่ไม่ถูกลบ
         let activeDb = db.filter(item => !hiddenIds.includes(item.id));
-        const latestEntries = {};
-        activeDb.forEach(item => { if (!latestEntries[item.no] || item.id > latestEntries[item.no].id) { latestEntries[item.no] = item; } });
+        
+        // ค้นหาตามเลขที่เอกสารหรือชื่อลูกค้า
         const filtered = activeDb.filter(r => r.no.toLowerCase().includes(s) || (r.custName && r.custName.toLowerCase().includes(s)));
         const body = document.getElementById('historyTableBody');
+        
+        // เรียงจากใหม่ไปเก่า แต่ไม่ซ่อนของเดิม
         body.innerHTML = filtered.slice().reverse().map(r => {
             let editTag = r.editCount > 0 ? ` <span style="color:red; font-weight:bold;">(แก้ไขครั้งที่ ${r.editCount})</span>` : "";
-            return `<tr><td><strong>${r.no}</strong></td><td>${r.timestamp}</td><td>${r.custName}${editTag}</td><td class="text-primary fw-bold">${r.total}</td><td class="d-flex gap-1 justify-content-center"><button class="btn btn-info btn-sm py-0 text-white" onclick="viewRecordById(${r.id})">👁️</button><button class="btn btn-warning btn-sm py-0" onclick="loadRecordById(${r.id})">แก้</button><button class="btn btn-danger btn-sm py-0" onclick="deleteRecord(${r.id})">🗑️</button></td></tr>`;
+            return `<tr>
+                <td><strong>${r.no}</strong></td>
+                <td>${r.timestamp}</td>
+                <td>${r.custName}${editTag}</td>
+                <td class="text-primary fw-bold">${r.total}</td>
+                <td class="d-flex gap-1 justify-content-center">
+                    <button class="btn btn-info btn-sm py-0 text-white" onclick="viewRecordById(${r.id})">👁️</button>
+                    <button class="btn btn-warning btn-sm py-0" onclick="loadRecordById(${r.id})">แก้</button>
+                    <button class="btn btn-danger btn-sm py-0" onclick="deleteRecord(${r.id})">🗑️</button>
+                </td>
+            </tr>`;
         }).join('');
         
+        // สถิติ Dashboard (เฉพาะรุ่นล่าสุดของแต่ละเลขที่)
+        const latestOnly = {};
+        activeDb.forEach(item => { if (!latestOnly[item.no] || item.id > latestOnly[item.no].id) latestOnly[item.no] = item; });
         let q = 0, i = 0, rc = 0, qc = 0, ic = 0, rcc = 0;
-        Object.values(latestEntries).forEach(d => { 
+        Object.values(latestOnly).forEach(d => { 
             const v = parseFloat(d.total.replace(/,/g, '').replace(' บาท', '')) || 0; 
             if(d.type === 'Quatation.png') { q += v; qc++; } else if(d.type === 'Delivery&invoice.png') { i += v; ic++; } else if(d.type === 'Receipt.png') { rc += v; rcc++; }
         });
@@ -394,15 +395,24 @@
         document.getElementById('dashCountRC').innerText = rcc + " รายการ";
     }
 
+    // แก้ไขระบบบันทึก: เก็บของเก่าไว้ให้เห็น
     async function saveData() {
         const btn = document.getElementById('btnMainSave'); btn.disabled = true;
         const items = [];
         document.querySelectorAll('#itemRows tr').forEach(r => { items.push({ name: r.querySelector('.in-item').value, price: r.querySelector('.in-price').value, qty: r.querySelector('.in-qty').value, unit: r.querySelector('.in-unit').value, unitLabel: r.querySelector('.in-unit-label').value }); });
+        
         const editId = document.getElementById('editingRecordId').value;
-        let editCount = 0; if (editId) { const oldRecord = db.find(x => x.id == editId); editCount = (oldRecord && oldRecord.editCount ? oldRecord.editCount : 0) + 1; hiddenIds.push(parseInt(editId)); localStorage.setItem(HIDDEN_KEY, JSON.stringify(hiddenIds)); }
+        let editCount = 0; 
+        if (editId) { 
+            const oldRecord = db.find(x => x.id == editId); 
+            editCount = (oldRecord && oldRecord.editCount ? oldRecord.editCount : 0) + 1; 
+            // ไม่ต้องใส่ลงใน hiddenIds แล้ว เพื่อให้รายการเดิมยังโชว์อยู่
+        }
+        
         const record = { id: Date.now(), timestamp: new Date().toLocaleString('th-TH'), no: document.getElementById('inNo').value, date: document.getElementById('inDate').value, custName: document.getElementById('custName').value, custAddr: document.getElementById('custAddr').value, custTax: document.getElementById('custTax').value, subtotal: document.getElementById('liveSubtotal').innerText, disc: document.getElementById('inDiscount').value, taxRate: document.getElementById('inTaxRate').value, taxVal: document.getElementById('liveTax').innerText, total: document.getElementById('liveTotal').innerText + " บาท", type: document.getElementById('docType').value, items, editCount, bank: { name: document.getElementById('bankName').value, acc: document.getElementById('bankAccName').value, type: document.getElementById('bankType').value, no: document.getElementById('bankNo').value } };
+        
         const success = await syncToCloud(record);
-        if(success) { alert("บันทึกข้อมูลสำเร็จ"); await loadDataFromCloud(); resetFormOnly(); }
+        if(success) { alert("บันทึกข้อมูลเวอร์ชันใหม่สำเร็จ"); await loadDataFromCloud(); resetFormOnly(); }
         btn.disabled = false;
     }
 
@@ -437,12 +447,11 @@
             last.querySelector('.in-unit').value = it.unit; 
             last.querySelector('.in-unit-label').value = it.unitLabel;
         }
-        
-        setTimeout(() => { updatePreview(); }, 200);
+        updatePreview(); setTimeout(() => { updatePreview(); }, 150);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function deleteRecord(id) { if(confirm("ลบประวัติรายการนี้ออกจากหน้าเพจ?")) { hiddenIds.push(id); localStorage.setItem(HIDDEN_KEY, JSON.stringify(hiddenIds)); renderHistory(); } }
+    function deleteRecord(id) { if(confirm("ต้องการลบเวอร์ชันนี้ออกจากประวัติ?")) { hiddenIds.push(id); localStorage.setItem(HIDDEN_KEY, JSON.stringify(hiddenIds)); renderHistory(); } }
     function updateCustomerDropdown() { const s = document.getElementById('custSelect'); s.innerHTML = '<option value="">-- รายชื่อที่บันทึกไว้ --</option>'; const uniqueCust = [...new Map(customers.map(item => [item.name, item])).values()]; uniqueCust.forEach((c, i) => s.innerHTML += `<option value="${i}">${c.name}</option>`); customers = uniqueCust; }
     function selectCustomer(i) { if(i === "") return; const c = customers[i]; document.getElementById('custName').value = c.name; document.getElementById('custAddr').value = c.addr; document.getElementById('custTax').value = c.tax || ""; updatePreview(); }
     function updateBankDropdown() { const s = document.getElementById('bankSelect'); s.innerHTML = '<option value="">-- บัญชีที่บันทึกไว้ --</option>'; banks.forEach((b, i) => s.innerHTML += `<option value="${i}">${b.name}</option>`); }
