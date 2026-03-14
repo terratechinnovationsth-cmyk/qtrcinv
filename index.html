@@ -274,7 +274,7 @@
         n = n.toString().replace(/,/g, ""); n = parseFloat(n); if (isNaN(n) || n == 0) return "ศูนย์บาทถ้วน";
         var s = n.toFixed(2).split("."); var B = s[0], St = s[1];
         function C(A) {
-            const TN = ["ศูนย์", "หนึ่ง", "สอง", "สาม", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
+            const TN = ["ศูนย์", "หนึ่ง", "สอง", "สาม", "สี่", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
             const TU = ["", "สิบ", "ร้อย", "พัน", "หมื่น", "แสน", "ล้าน"];
             var R = ""; var L = A.length;
             for (var i = 0; i < L; i++) {
@@ -395,8 +395,8 @@
         syncToCloud(record); alert("บันทึกข้อมูลเรียบร้อยแล้ว"); location.reload();
     }
 
-    // ฟังก์ชันที่ได้รับการแก้ไขให้เสถียรกว่าเดิม
-    function loadRecordById(id) {
+    // แก้ไข: ใช้ Async/Await เพื่อรอให้โครงสร้าง HTML สร้างเสร็จก่อนคำนวณเงิน
+    async function loadRecordById(id) {
         const r = db.find(x => x.id === id); if(!r) return; 
         document.getElementById('editingRecordId').value = r.id;
         document.getElementById('docType').value = r.type; 
@@ -410,11 +410,10 @@
         document.getElementById('bankType').value = r.bank.type; 
         document.getElementById('bankNo').value = r.bank.no;
         
-        // ล้างแถวเก่าออกให้หมดก่อน
         document.getElementById('itemRows').innerHTML = ""; 
         
-        // สร้างแถวสินค้าใหม่ทั้งหมด
-        r.items.forEach(it => { 
+        // ใช้ Promise เพื่อรอให้ข้อมูลแถวทั้งหมดถูกใส่ลงใน DOM
+        const rowPromises = r.items.map(async (it) => {
             addRow(); 
             const last = document.getElementById('itemRows').lastElementChild; 
             last.querySelector('.in-item').value = it.name; 
@@ -425,9 +424,14 @@
             const lineTotal = (parseFloat(it.price) || 0) * (parseFloat(it.qty) || 0);
             last.querySelector('.line-total-val').innerText = lineTotal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
         });
+
+        await Promise.all(rowPromises);
         
-        // บังคับให้ระบบคำนวณสรุปยอดอีกครั้งหลังจากวาดแถวเสร็จ (Wrap ใน setTimeout เพื่อความชัวร์)
-        setTimeout(() => { updatePreview(); }, 50);
+        // บังคับให้ Browser ทำการ Reflow หน้าจอ และสั่งคำนวณเงิน
+        requestAnimationFrame(() => {
+            updatePreview();
+        });
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
