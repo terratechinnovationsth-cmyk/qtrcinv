@@ -179,6 +179,17 @@
     </div>
 </div>
 
+<div class="no-print-section no-print bg-light border-top-0">
+    <div class="container">
+        <h5 class="text-secondary fw-bold mb-3">แผงควบคุมและสรุปผล</h5>
+        <div class="row g-2">
+            <div class="col-12 col-md-4"><div class="dash-card dash-qt"><div class="dash-title">QT</div><div class="dash-value text-secondary" id="dashTotalQT">0.00 บาท</div><div class="dash-count" id="dashCountQT">0 รายการ</div></div></div>
+            <div class="col-12 col-md-4"><div class="dash-card dash-inv"><div class="dash-title">INV</div><div class="dash-value text-info" id="dashTotalINV">0.00 บาท</div><div class="dash-count" id="dashCountINV">0 รายการ</div></div></div>
+            <div class="col-12 col-md-4"><div class="dash-card dash-rc"><div class="dash-title">RC</div><div class="dash-value text-success" id="dashTotalRC">0.00 บาท</div><div class="dash-count" id="dashCountRC">0 รายการ</div></div></div>
+        </div>
+    </div>
+</div>
+
 <div class="history-section no-print">
     <div class="container">
         <div class="row g-2 align-items-center mb-3">
@@ -250,7 +261,6 @@
             const response = await fetch(SCRIPT_URL);
             const cloud = await response.json();
             if(cloud) {
-                // กรองข้อมูล: รายการที่ลบต้องหายถาวรเฉพาะเครื่องนี้ รายการอื่นต้องอยู่ครบ
                 db = (cloud.history || []).filter(item => !hiddenIds.includes(item.id));
                 customers = (cloud.customers || []).filter(c => !hiddenIds.includes(c.name));
                 banks = (cloud.banks || []).filter(b => !hiddenIds.includes(b.no));
@@ -281,11 +291,26 @@
                 <button class="btn btn-danger btn-sm py-0" onclick="deleteRecord(${r.id})">🗑️</button>
             </td>
         </tr>`).join('');
+
+        // สรุปยอดรวม Dashboard (นำกลับมา)
+        let q = 0, i = 0, rc = 0; 
+        let qc = 0, ic = 0, rcc = 0;
+        db.forEach(d => { 
+            const v = parseFloat(d.total.replace(/,/g, '').replace(' บาท', '')) || 0; 
+            if(d.type === 'Quatation.png') { q += v; qc++; }
+            else if(d.type === 'Delivery&invoice.png') { i += v; ic++; }
+            else if(d.type === 'Receipt.png') { rc += v; rcc++; }
+        });
+        document.getElementById('dashTotalQT').innerText = q.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
+        document.getElementById('dashCountQT').innerText = qc + " รายการ";
+        document.getElementById('dashTotalINV').innerText = i.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
+        document.getElementById('dashCountINV').innerText = ic + " รายการ";
+        document.getElementById('dashTotalRC').innerText = rc.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
+        document.getElementById('dashCountRC').innerText = rcc + " รายการ";
     }
 
-    // แก้ไข: ลบเฉพาะรายการที่เลือก (เก็บ ID แยกกัน)
     function deleteRecord(id) {
-        if(confirm("ลบประวัติรายการนี้ออกจากหน้าเพจ? (ไม่ลบคลาวด์)")) {
+        if(confirm("ลบประวัติรายการนี้ออกจากหน้าเพจ?")) {
             hiddenIds.push(id);
             localStorage.setItem(HIDDEN_KEY, JSON.stringify(hiddenIds));
             db = db.filter(item => item.id !== id);
@@ -297,7 +322,7 @@
         n = n.toString().replace(/,/g, ""); n = parseFloat(n); if (isNaN(n) || n == 0) return "ศูนย์บาทถ้วน";
         var s = n.toFixed(2).split("."); var B = s[0], St = s[1];
         function C(A) {
-            const TN = ["ศูนย์", "หนึ่ง", "สอง", "สาม", "สี่", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
+            const TN = ["ศูนย์", "หนึ่ง", "สอง", "สาม", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
             const TU = ["", "สิบ", "ร้อย", "พัน", "หมื่น", "แสน", "ล้าน"];
             var R = ""; var L = A.length;
             for (var i = 0; i < L; i++) {
@@ -321,7 +346,6 @@
         document.getElementById('outNo').innerText = document.getElementById('inNo').value;
         document.getElementById('outCustName').innerText = document.getElementById('custName').value;
         document.getElementById('outCustAddr').innerText = document.getElementById('custAddr').value;
-        // คืนค่า: เลขผู้เสียภาษีลูกค้า
         const taxVal = document.getElementById('custTax').value;
         document.getElementById('outCustTax').innerText = taxVal ? "เลขประจำตัวผู้เสียภาษี " + taxVal : "";
         
@@ -356,7 +380,8 @@
 
     function addRow() {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td class="row-no"></td><td><input type="text" class="form-control form-control-sm in-item" oninput="updatePreview()"></td><td><div class="input-group input-group-sm"><input type="number" class="form-control in-price" oninput="updatePreview()"><span class="input-group-text">/</span><select class="form-select in-unit-label" onchange="syncUnit(this.closest('tr'))"><option value="ชิ้น">ชิ้น</option><option value="กรัม">กรัม</option><option value="กิโลกรัม">กิโลกรัม</option><option value="ถุง">ถุง</option><option value="ขวด">ขวด</option><option value="ตัน">ตัน</option></select></div></td><td><input type="number" class="form-control form-control-sm in-qty" oninput="updatePreview()"></td><td><select class="form-select form-select-sm in-unit" onchange="updatePreview()"><option value="ชิ้น">ชิ้น</option><option value="กรัม">กรัม</option><option value="กิโลกรัม">กิโลกรัม</option><option value="ถุง">ถุง</option><option value="ขวด">ขวด</option><option value="ตัน">ตัน</option></select></td><td class="text-end fw-bold"><span class="line-total-val">0.00</span></td><td class="text-center"><button class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove(); updatePreview();">×</button></td>`;
+        // คืนค่า: ดรอปดาวน์หน่วยที่หายไป
+        tr.innerHTML = `<td class="row-no"></td><td><input type="text" class="form-control form-control-sm in-item" oninput="updatePreview()"></td><td><div class="input-group input-group-sm"><input type="number" class="form-control in-price" oninput="updatePreview()"><span class="input-group-text">/</span><select class="form-select in-unit-label" onchange="syncUnit(this.closest('tr'))"><option value="ชิ้น">ชิ้น</option><option value="กรัม">กรัม</option><option value="กิโลกรัม">กิโลกรัม</option><option value="ถุง">ถุง</option><option value="ขวด">ขวด</option><option value="ตัน">ตัน</option><option value="ซอง">ซอง</option><option value="กล่อง">กล่อง</option><option value="ลัง">ลัง</option><option value="ต้น">ต้น</option><option value="ถาด">ถาด</option></select></div></td><td><input type="number" class="form-control form-control-sm in-qty" oninput="updatePreview()"></td><td><select class="form-select form-select-sm in-unit" onchange="updatePreview()"><option value="ชิ้น">ชิ้น</option><option value="กรัม">กรัม</option><option value="กิโลกรัม">กิโลกรัม</option><option value="ถุง">ถุง</option><option value="ขวด">ขวด</option><option value="ตัน">ตัน</option><option value="ซอง">ซอง</option><option value="กล่อง">กล่อง</option><option value="ลัง">ลัง</option><option value="ต้น">ต้น</option><option value="ถาด">ถาด</option></select></td><td class="text-end fw-bold"><span class="line-total-val">0.00</span></td><td class="text-center"><button class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove(); updatePreview();">×</button></td>`;
         document.getElementById('itemRows').appendChild(tr); updateRowNumbers();
     }
     function updateRowNumbers() { document.querySelectorAll('#itemRows tr').forEach((r, i) => r.querySelector('.row-no').innerText = i+1); }
@@ -410,8 +435,8 @@
     function resetForm() { location.reload(); }
     function saveCustomerFull() { syncToCloud({ onlyCustomer: true, name: document.getElementById('custName').value, addr: document.getElementById('custAddr').value, tax: document.getElementById('custTax').value }); }
     function saveBankFull() { syncToCloud({ onlyBank: true, bank: { name: document.getElementById('bankName').value, acc: document.getElementById('bankAccName').value, type: document.getElementById('bankType').value, no: document.getElementById('bankNo').value } }); }
-    function deleteCustomerFromDb() { const idx = document.getElementById('custSelect').value; if(idx!=="" && confirm("ลบรายชื่อนี้จากหน้าเพจ?")) { hiddenIds.push(customers[idx].name); localStorage.setItem(HIDDEN_KEY, JSON.stringify(hiddenIds)); customers.splice(idx,1); updateCustomerDropdown(); document.getElementById('custName').value = ""; } }
-    function deleteBankFromDb() { const idx = document.getElementById('bankSelect').value; if(idx!=="" && confirm("ลบบัญชีนี้จากหน้าเพจ?")) { hiddenIds.push(banks[idx].no); localStorage.setItem(HIDDEN_KEY, JSON.stringify(hiddenIds)); banks.splice(idx,1); updateBankDropdown(); } }
+    function deleteCustomerFromDb() { const idx = document.getElementById('custSelect').value; if(idx!=="" && confirm("ลบ?")) { hiddenIds.push(customers[idx].name); localStorage.setItem(HIDDEN_KEY, JSON.stringify(hiddenIds)); customers.splice(idx,1); updateCustomerDropdown(); document.getElementById('custName').value = ""; } }
+    function deleteBankFromDb() { const idx = document.getElementById('bankSelect').value; if(idx!=="" && confirm("ลบ?")) { hiddenIds.push(banks[idx].no); localStorage.setItem(HIDDEN_KEY, JSON.stringify(hiddenIds)); banks.splice(idx,1); updateBankDropdown(); } }
     function quickPrintById(id, type) { const r = db.find(x => x.id === id); if(!r) return; renderA4Data(r, type); setTimeout(() => window.print(), 500); }
     function exportData() { const b = new Blob([JSON.stringify({ history: db, customers, banks }, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = "TTI_Backup.json"; a.click(); }
     function importData(e) { const reader = new FileReader(); reader.onload = (f) => { const d = JSON.parse(f.target.result); localStorage.setItem(DB_KEY, JSON.stringify(d.history)); location.reload(); }; reader.readAsText(e.target.files[0]); }
