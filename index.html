@@ -330,9 +330,8 @@
         const s = document.getElementById('custSelect');
         s.innerHTML = '<option value="">-- รายชื่อที่บันทึกไว้ --</option>';
         customers.forEach((c, i) => {
-            // แก้ไข: แสดงเฉพาะชื่อลูกค้าเท่านั้น
-            const displayName = c.name || "ไม่มีชื่อ";
-            s.innerHTML += `<option value="${i}">${displayName}</option>`;
+            // ดึงเฉพาะชื่อ (คอลัมน์ A ในตรรกะข้อมูล) มาแสดงเท่านั้น
+            s.innerHTML += `<option value="${i}">${c.name}</option>`;
         });
     }
 
@@ -340,9 +339,8 @@
         const s = document.getElementById('bankSelect');
         s.innerHTML = '<option value="">-- บัญชีที่บันทึกไว้ --</option>';
         banks.forEach((b, i) => {
-            // แก้ไข: แสดงเฉพาะชื่อธนาคารเท่านั้น
-            const displayName = b.name || "ไม่มีชื่อธนาคาร";
-            s.innerHTML += `<option value="${i}">${displayName}</option>`;
+            // ดึงเฉพาะชื่อธนาคารมาแสดงเท่านั้น
+            s.innerHTML += `<option value="${i}">${b.name}</option>`;
         });
     }
 
