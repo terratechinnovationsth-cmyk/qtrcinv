@@ -267,11 +267,17 @@
         } catch(e) { console.error(e); }
     }
 
+    // ฟังก์ชันอ่านตัวเลขเป็นภาษาไทย (แก้ไขลำดับ logic เล็กน้อยเพื่อความแม่นยำ)
     function ThaiBaht(n) {
-        n = parseFloat(n) || 0; if (n === 0) return "ศูนย์บาทถ้วน";
-        var s = n.toFixed(2).split("."); var B = s[0], St = s[1];
+        n = parseFloat(n) || 0; 
+        n = Math.round(n * 100) / 100; // ป้องกันปัญหาทศนิยมเพี้ยน
+        if (n === 0) return "ศูนย์บาทถ้วน";
+        
+        var s = n.toFixed(2).split("."); 
+        var B = s[0], St = s[1];
+        
         function C(A) {
-            const TN = ["ศูนย์", "หนึ่ง", "สอง", "สาม", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
+            const TN = ["ศูนย์", "หนึ่ง", "สอง", "สาม", "สี่", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
             const TU = ["", "สิบ", "ร้อย", "พัน", "หมื่น", "แสน", "ล้าน"];
             var R = ""; var L = A.length;
             for (var i = 0; i < L; i++) {
@@ -285,11 +291,14 @@
                 if (p > 0 && (p % 6) == 0) R += "ล้าน";
             } return R;
         }
-        var res = C(B) + "บาท"; if (St == "00") res += "ถ้วน"; else res += C(St) + "สตางค์"; return res;
+        
+        var res = "";
+        if (B !== "0") res += C(B) + "บาท";
+        if (St === "00") res += "ถ้วน"; else res += C(St) + "สตางค์"; 
+        return res;
     }
 
     function updatePreview() {
-        // เงื่อนไขสำคัญ: ถ้ากำลัง ดู (Preview) อยู่ จะไม่ให้เขียนทับข้อมูล แต่ถ้ากำลัง แก้ ข้อมูลจะคำนวณปกติ
         if (currentViewingId) return; 
         
         document.getElementById('viewTemplate').src = document.getElementById('docType').value;
@@ -325,6 +334,8 @@
         const subAfterDisc = subtotal - discount;
         const taxVal = subAfterDisc * (taxRate / 100);
         const grandTotal = subAfterDisc + taxVal;
+        
+        // แก้ไขจุดสำคัญ: ส่ง grandTotal เข้า ThaiBaht เพื่อให้ตัวอักษรตรงกับเลขรวมเงินสุทธิ
         const bahtStr = ThaiBaht(grandTotal);
 
         document.getElementById('liveSubtotal').innerText = subtotal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
@@ -399,10 +410,8 @@
         document.getElementById('editingRecordId').value = ""; document.getElementById('inNo').value = ""; document.getElementById('custName').value = ""; document.getElementById('custAddr').value = ""; document.getElementById('custTax').value = ""; document.getElementById('inDiscount').value = "0"; document.getElementById('itemRows').innerHTML = ""; addRow(); updatePreview();
     }
 
-    // แก้ไข loadRecordById: บังคับปิด View Mode ทันทีที่กดแก้ และหน่วงเวลาคำนวณเงิน
     async function loadRecordById(id) {
-        closeViewMode(); // ล้างสถานะ "ดู" ออกไปก่อนเพื่อปลดล็อกฟังก์ชันคำนวณเงิน
-        
+        closeViewMode(); 
         const r = db.find(x => x.id === id); if (!r) return;
         document.getElementById('editingRecordId').value = r.id;
         document.getElementById('docType').value = r.type;
