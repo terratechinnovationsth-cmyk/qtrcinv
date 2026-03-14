@@ -264,65 +264,17 @@
                 db = (cloud.history || []).filter(item => !hiddenIds.includes(item.id));
                 customers = (cloud.customers || []).filter(c => !hiddenIds.includes(c.name));
                 banks = (cloud.banks || []).filter(b => !hiddenIds.includes(b.no));
-                
                 updateCustomerDropdown(); updateBankDropdown(); renderHistory();
                 document.getElementById('syncStatus').innerText = "✅ ซิงค์สำเร็จ";
             }
         } catch(e) { console.error(e); }
     }
 
-    function renderHistory() {
-        const s = document.getElementById('historySearch').value.toLowerCase();
-        let filtered = db.filter(r => r.no.toLowerCase().includes(s) || (r.custName && r.custName.toLowerCase().includes(s)));
-        const body = document.getElementById('historyTableBody');
-        body.innerHTML = filtered.slice().reverse().map(r => `<tr>
-            <td><strong>${r.no}</strong></td>
-            <td>${r.timestamp}</td>
-            <td>${r.custName}</td>
-            <td class="text-primary fw-bold">${r.total}</td>
-            <td>
-                <button class="btn btn-xs btn-outline-dark py-0" style="font-size:10px" onclick="quickPrintById(${r.id}, 'Quatation.png')">QT</button>
-                <button class="btn btn-xs btn-outline-dark py-0" style="font-size:10px" onclick="quickPrintById(${r.id}, 'Receipt.png')">RC</button>
-                <button class="btn btn-xs btn-outline-dark py-0" style="font-size:10px" onclick="quickPrintById(${r.id}, 'Delivery&invoice.png')">INV</button>
-            </td>
-            <td class="d-flex gap-1 justify-content-center">
-                <button class="btn btn-info btn-sm py-0 text-white" onclick="viewRecordById(${r.id})">👁️</button>
-                <button class="btn btn-warning btn-sm py-0" onclick="loadRecordById(${r.id})">แก้</button>
-                <button class="btn btn-danger btn-sm py-0" onclick="deleteRecord(${r.id})">🗑️</button>
-            </td>
-        </tr>`).join('');
-
-        // สรุปยอดรวม Dashboard (นำกลับมา)
-        let q = 0, i = 0, rc = 0; 
-        let qc = 0, ic = 0, rcc = 0;
-        db.forEach(d => { 
-            const v = parseFloat(d.total.replace(/,/g, '').replace(' บาท', '')) || 0; 
-            if(d.type === 'Quatation.png') { q += v; qc++; }
-            else if(d.type === 'Delivery&invoice.png') { i += v; ic++; }
-            else if(d.type === 'Receipt.png') { rc += v; rcc++; }
-        });
-        document.getElementById('dashTotalQT').innerText = q.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
-        document.getElementById('dashCountQT').innerText = qc + " รายการ";
-        document.getElementById('dashTotalINV').innerText = i.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
-        document.getElementById('dashCountINV').innerText = ic + " รายการ";
-        document.getElementById('dashTotalRC').innerText = rc.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
-        document.getElementById('dashCountRC').innerText = rcc + " รายการ";
-    }
-
-    function deleteRecord(id) {
-        if(confirm("ลบประวัติรายการนี้ออกจากหน้าเพจ?")) {
-            hiddenIds.push(id);
-            localStorage.setItem(HIDDEN_KEY, JSON.stringify(hiddenIds));
-            db = db.filter(item => item.id !== id);
-            renderHistory();
-        }
-    }
-
     function ThaiBaht(n) {
         n = n.toString().replace(/,/g, ""); n = parseFloat(n); if (isNaN(n) || n == 0) return "ศูนย์บาทถ้วน";
         var s = n.toFixed(2).split("."); var B = s[0], St = s[1];
         function C(A) {
-            const TN = ["ศูนย์", "หนึ่ง", "สอง", "สาม", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
+            const TN = ["ศูนย์", "หนึ่ง", "สอง", "สาม", "สี่", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
             const TU = ["", "สิบ", "ร้อย", "พัน", "หมื่น", "แสน", "ล้าน"];
             var R = ""; var L = A.length;
             for (var i = 0; i < L; i++) {
@@ -347,7 +299,7 @@
         document.getElementById('outCustName').innerText = document.getElementById('custName').value;
         document.getElementById('outCustAddr').innerText = document.getElementById('custAddr').value;
         const taxVal = document.getElementById('custTax').value;
-        document.getElementById('outCustTax').innerText = taxVal ? "เลขประจำตัวผู้เสียภาษี " + taxVal : "";
+        document.getElementById('outCustTax').innerText = taxVal ? "เลขผู้เสียภาษี " + taxVal : "";
         
         let sub = 0, html = '';
         const items = document.querySelectorAll('.in-item'), prices = document.querySelectorAll('.in-price'), qtys = document.querySelectorAll('.in-qty'), units = document.querySelectorAll('.in-unit'), labels = document.querySelectorAll('.in-unit-label'), lTotals = document.querySelectorAll('.line-total-val');
@@ -360,32 +312,71 @@
 
         const disc = parseFloat(document.getElementById('inDiscount').value) || 0;
         const tRate = parseFloat(document.getElementById('inTaxRate').value) || 7;
-        const tax = (sub - disc) * (tRate / 100);
-        const totalFinal = sub - disc + tax;
+        const taxValCalc = (sub - disc) * (tRate / 100);
+        const totalFinal = sub - disc + taxValCalc;
+
+        // แก้ไข: ให้ค่าตัวอักษรอ้างอิงจาก totalFinal ที่เป็นยอดรวมสุทธิเสมอ
+        const finalBahtStr = ThaiBaht(totalFinal);
 
         document.getElementById('liveSubtotal').innerText = sub.toLocaleString(undefined,{minimumFractionDigits:2});
         document.getElementById('liveDiscountDisplay').innerText = disc.toLocaleString(undefined,{minimumFractionDigits:2});
-        document.getElementById('liveTax').innerText = tax.toLocaleString(undefined,{minimumFractionDigits:2});
+        document.getElementById('liveTax').innerText = taxValCalc.toLocaleString(undefined,{minimumFractionDigits:2});
         document.getElementById('liveTotal').innerText = totalFinal.toLocaleString(undefined,{minimumFractionDigits:2});
-        document.getElementById('liveThaiBaht').innerText = "ตัวอักษร: (" + ThaiBaht(totalFinal) + ")";
+        document.getElementById('liveThaiBaht').innerText = "ตัวอักษร: (" + finalBahtStr + ")";
         
         document.getElementById('outItemList').innerHTML = html;
         document.getElementById('outSubtotal').innerText = sub.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
         document.getElementById('outDiscount').innerText = disc.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
-        document.getElementById('outTax').innerText = tax.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
+        document.getElementById('outTax').innerText = taxValCalc.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
         document.getElementById('outTotal').innerText = totalFinal.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
-        document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(totalFinal) + ")";
+        document.getElementById('outThaiBaht').innerText = "(" + finalBahtStr + ")";
         document.getElementById('outBankInfo').innerHTML = `${document.getElementById('bankName').value}<br>${document.getElementById('bankAccName').value}<br>${document.getElementById('bankType').value}<br>${document.getElementById('bankNo').value}`;
     }
 
     function addRow() {
         const tr = document.createElement('tr');
-        // คืนค่า: ดรอปดาวน์หน่วยที่หายไป
         tr.innerHTML = `<td class="row-no"></td><td><input type="text" class="form-control form-control-sm in-item" oninput="updatePreview()"></td><td><div class="input-group input-group-sm"><input type="number" class="form-control in-price" oninput="updatePreview()"><span class="input-group-text">/</span><select class="form-select in-unit-label" onchange="syncUnit(this.closest('tr'))"><option value="ชิ้น">ชิ้น</option><option value="กรัม">กรัม</option><option value="กิโลกรัม">กิโลกรัม</option><option value="ถุง">ถุง</option><option value="ขวด">ขวด</option><option value="ตัน">ตัน</option><option value="ซอง">ซอง</option><option value="กล่อง">กล่อง</option><option value="ลัง">ลัง</option><option value="ต้น">ต้น</option><option value="ถาด">ถาด</option></select></div></td><td><input type="number" class="form-control form-control-sm in-qty" oninput="updatePreview()"></td><td><select class="form-select form-select-sm in-unit" onchange="updatePreview()"><option value="ชิ้น">ชิ้น</option><option value="กรัม">กรัม</option><option value="กิโลกรัม">กิโลกรัม</option><option value="ถุง">ถุง</option><option value="ขวด">ขวด</option><option value="ตัน">ตัน</option><option value="ซอง">ซอง</option><option value="กล่อง">กล่อง</option><option value="ลัง">ลัง</option><option value="ต้น">ต้น</option><option value="ถาด">ถาด</option></select></td><td class="text-end fw-bold"><span class="line-total-val">0.00</span></td><td class="text-center"><button class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove(); updatePreview();">×</button></td>`;
         document.getElementById('itemRows').appendChild(tr); updateRowNumbers();
     }
     function updateRowNumbers() { document.querySelectorAll('#itemRows tr').forEach((r, i) => r.querySelector('.row-no').innerText = i+1); }
     function syncUnit(r) { r.querySelector('.in-unit').value = r.querySelector('.in-unit-label').value; updatePreview(); }
+
+    function renderHistory() {
+        const s = document.getElementById('historySearch').value.toLowerCase();
+        let filtered = db.filter(r => r.no.toLowerCase().includes(s) || (r.custName && r.custName.toLowerCase().includes(s)));
+        const body = document.getElementById('historyTableBody');
+        body.innerHTML = filtered.slice().reverse().map(r => `<tr>
+            <td><strong>${r.no}</strong></td>
+            <td>${r.timestamp}</td>
+            <td>${r.custName}</td>
+            <td class="text-primary fw-bold">${r.total}</td>
+            <td>
+                <button class="btn btn-xs btn-outline-dark py-0" style="font-size:10px" onclick="quickPrintById(${r.id}, 'Quatation.png')">QT</button>
+                <button class="btn btn-xs btn-outline-dark py-0" style="font-size:10px" onclick="quickPrintById(${r.id}, 'Receipt.png')">RC</button>
+                <button class="btn btn-xs btn-outline-dark py-0" style="font-size:10px" onclick="quickPrintById(${r.id}, 'Delivery&invoice.png')">INV</button>
+            </td>
+            <td class="d-flex gap-1 justify-content-center">
+                <button class="btn btn-info btn-sm py-0 text-white" onclick="viewRecordById(${r.id})">👁️</button>
+                <button class="btn btn-warning btn-sm py-0" onclick="loadRecordById(${r.id})">แก้</button>
+                <button class="btn btn-danger btn-sm py-0" onclick="deleteRecord(${r.id})">🗑️</button>
+            </td>
+        </tr>`).join('');
+
+        let q = 0, i = 0, rc = 0; 
+        let qc = 0, ic = 0, rcc = 0;
+        db.forEach(d => { 
+            const v = parseFloat(d.total.replace(/,/g, '').replace(' บาท', '')) || 0; 
+            if(d.type === 'Quatation.png') { q += v; qc++; }
+            else if(d.type === 'Delivery&invoice.png') { i += v; ic++; }
+            else if(d.type === 'Receipt.png') { rc += v; rcc++; }
+        });
+        document.getElementById('dashTotalQT').innerText = q.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
+        document.getElementById('dashCountQT').innerText = qc + " รายการ";
+        document.getElementById('dashTotalINV').innerText = i.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
+        document.getElementById('dashCountINV').innerText = ic + " รายการ";
+        document.getElementById('dashTotalRC').innerText = rc.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
+        document.getElementById('dashCountRC').innerText = rcc + " รายการ";
+    }
 
     function saveData() {
         const items = []; document.querySelectorAll('#itemRows tr').forEach(r => { items.push({ name: r.querySelector('.in-item').value, price: r.querySelector('.in-price').value, qty: r.querySelector('.in-qty').value, unit: r.querySelector('.in-unit').value, unitLabel: r.querySelector('.in-unit-label').value }); });
@@ -409,6 +400,15 @@
         updatePreview(); window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    function deleteRecord(id) {
+        if(confirm("ลบประวัติรายการนี้ออกจากหน้าเพจ? (ไม่ลบคลาวด์)")) {
+            hiddenIds.push(id);
+            localStorage.setItem(HIDDEN_KEY, JSON.stringify(hiddenIds));
+            db = db.filter(item => item.id !== id);
+            renderHistory();
+        }
+    }
+
     function updateCustomerDropdown() { const s = document.getElementById('custSelect'); s.innerHTML = '<option value="">-- รายชื่อที่บันทึกไว้ --</option>'; customers.forEach((c, i) => s.innerHTML += `<option value="${i}">${c.name}</option>`); }
     function selectCustomer(i) { if(i === "") return; const c = customers[i]; document.getElementById('custName').value = c.name; document.getElementById('custAddr').value = c.addr; document.getElementById('custTax').value = c.tax || ""; updatePreview(); }
     function updateBankDropdown() { const s = document.getElementById('bankSelect'); s.innerHTML = '<option value="">-- บัญชีที่บันทึกไว้ --</option>'; banks.forEach((b, i) => s.innerHTML += `<option value="${i}">${b.name}</option>`); }
@@ -421,14 +421,17 @@
         document.getElementById('viewTemplate').src = type; 
         document.getElementById('outDate').innerText = r.date; document.getElementById('outNo').innerText = r.no; 
         document.getElementById('outCustName').innerText = r.custName; document.getElementById('outCustAddr').innerText = r.custAddr; 
-        document.getElementById('outCustTax').innerText = r.custTax ? "เลขประจำตัวผู้เสียภาษี " + r.custTax : "";
+        document.getElementById('outCustTax').innerText = r.custTax ? "เลขผู้เสียภาษี " + r.custTax : "";
         let html = ''; r.items.forEach((it, i) => { html += `<div class="item-row-print"><div class="c-desc">${i+1}. ${it.name}</div><div class="c-uprice">${parseFloat(it.price).toLocaleString()} /${it.unitLabel}</div><div class="c-qty">${it.qty} ${it.unit}</div><div class="c-total">${(it.price*it.qty).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</div></div>`; });
         document.getElementById('outItemList').innerHTML = html;
         document.getElementById('outSubtotal').innerText = r.subtotal + " บาท";
         document.getElementById('outDiscount').innerText = (parseFloat(r.disc)||0).toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
         document.getElementById('outTax').innerText = r.taxVal + " บาท";
         document.getElementById('outTotal').innerText = r.total; 
-        document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(r.total) + ")";
+        
+        // คำนวณตัวอักษรไทยจากยอด total ในประวัติ (ล้างตัวอักษร ' บาท' และ ',' ออกก่อน)
+        const totalNum = parseFloat(r.total.replace(/,/g, '').replace(' บาท', ''));
+        document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(totalNum) + ")";
         document.getElementById('outBankInfo').innerHTML = `${r.bank.name}<br>${r.bank.acc}<br>${r.bank.type}<br>${r.bank.no}`;
     }
     
@@ -436,7 +439,7 @@
     function saveCustomerFull() { syncToCloud({ onlyCustomer: true, name: document.getElementById('custName').value, addr: document.getElementById('custAddr').value, tax: document.getElementById('custTax').value }); }
     function saveBankFull() { syncToCloud({ onlyBank: true, bank: { name: document.getElementById('bankName').value, acc: document.getElementById('bankAccName').value, type: document.getElementById('bankType').value, no: document.getElementById('bankNo').value } }); }
     function deleteCustomerFromDb() { const idx = document.getElementById('custSelect').value; if(idx!=="" && confirm("ลบ?")) { hiddenIds.push(customers[idx].name); localStorage.setItem(HIDDEN_KEY, JSON.stringify(hiddenIds)); customers.splice(idx,1); updateCustomerDropdown(); document.getElementById('custName').value = ""; } }
-    function deleteBankFromDb() { const idx = document.getElementById('bankSelect').value; if(idx!=="" && confirm("ลบ?")) { hiddenIds.push(banks[idx].no); localStorage.setItem(HIDDEN_KEY, JSON.stringify(hiddenIds)); banks.splice(idx,1); updateBankDropdown(); } }
+    function deleteBankFromDb() { const idx = document.getElementById('bankSelect').value; if(idx!=="" && confirm("ลบ?")) { hiddenIds.push(banks[idx].no); localStorage.setItem(HIDDEN_KEY, JSON.stringify(hiddenIds)); banks.splice(idx,1); updateBankDropdown(); document.getElementById('bankNo').value = ""; } }
     function quickPrintById(id, type) { const r = db.find(x => x.id === id); if(!r) return; renderA4Data(r, type); setTimeout(() => window.print(), 500); }
     function exportData() { const b = new Blob([JSON.stringify({ history: db, customers, banks }, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = "TTI_Backup.json"; a.click(); }
     function importData(e) { const reader = new FileReader(); reader.onload = (f) => { const d = JSON.parse(f.target.result); localStorage.setItem(DB_KEY, JSON.stringify(d.history)); location.reload(); }; reader.readAsText(e.target.files[0]); }
