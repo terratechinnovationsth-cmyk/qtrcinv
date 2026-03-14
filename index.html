@@ -294,14 +294,14 @@
         banks.forEach((b, i) => s.innerHTML += `<option value="${i}">${b.name}</option>`);
     }
 
-    // แก้ไข: ปรับการดึงข้อมูล Property ให้ครบถ้วนตามความต้องการใช้งาน
+    // แก้ไข: ปรับลำดับ Property ให้ถูกต้องตามช่องกรอกข้อมูล (ชื่อบัญชี, ประเภท, เลขบัญชี)
     function selectBank(i) {
         if(i === "") return;
         const b = banks[i];
         document.getElementById('bankName').value = b.name; 
-        document.getElementById('bankAccName').value = b.acc;
-        document.getElementById('bankType').value = b.type; 
-        document.getElementById('bankNo').value = b.no;
+        document.getElementById('bankAccName').value = b.acc; // ชื่อบัญชี
+        document.getElementById('bankType').value = b.type;    // ประเภทบัญชี
+        document.getElementById('bankNo').value = b.no;        // เลขที่บัญชี
         updatePreview();
     }
 
@@ -366,7 +366,7 @@
         document.getElementById('outTotal').innerText = totalFinal.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
         document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(totalFinal) + ")";
         
-        // แก้ไข: เพิ่มประเภทบัญชี (Bank Type) ให้แสดงครบ 4 บรรทัด
+        // ข้อมูลธนาคาร 4 บรรทัด (ตามที่แก้ไขก่อนหน้าซึ่งถูกต้องแล้ว)
         document.getElementById('outBankInfo').innerHTML = `${document.getElementById('bankName').value}<br>${document.getElementById('bankAccName').value}<br>${document.getElementById('bankType').value}<br>${document.getElementById('bankNo').value}`;
         
         const terms = document.querySelectorAll('.term-input');
@@ -439,11 +439,8 @@
         document.getElementById('outTax').innerText = (parseFloat(r.taxVal)||0).toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท"; 
         document.getElementById('outTotal').innerText = r.total;
         document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(r.total) + ")";
-        
-        // แก้ไข: เพิ่มประเภทบัญชี (Bank Type) ให้แสดงผลครบ 4 บรรทัด
         const bk = r.bank || {};
         document.getElementById('outBankInfo').innerHTML = `${bk.name}<br>${bk.acc}<br>${bk.type}<br>${bk.no}`;
-        
         const t1 = r.terms.slice(0,5).filter(Boolean).map(t => `• ${t}`).join('<br>'); const t2 = r.terms.slice(5,10).filter(Boolean).map(t => `• ${t}`).join('<br>');
         document.getElementById('outTerms').innerHTML = `<div style="width:50%">${t1}</div><div style="width:50%">${t2}</div>`;
     }
@@ -452,13 +449,10 @@
         const r = db.find(x => x.id === id); if(!r) return; document.getElementById('editingRecordId').value = r.id;
         document.getElementById('docType').value = r.type; document.getElementById('inDate').value = r.date; document.getElementById('inNo').value = r.no;
         document.getElementById('custName').value = r.custName; document.getElementById('custAddr').value = r.custAddr; document.getElementById('custEmail').value = r.custEmail || ""; document.getElementById('custTax').value = r.custTax || "";
-        
-        // แก้ไข: ดึงข้อมูล Bank Property ให้ครบถ้วน
         document.getElementById('bankName').value = r.bank.name || ""; 
         document.getElementById('bankAccName').value = r.bank.acc || ""; 
         document.getElementById('bankType').value = r.bank.type || ""; 
         document.getElementById('bankNo').value = r.bank.no || "";
-        
         document.getElementById('itemRows').innerHTML = ""; r.items.forEach(it => { addRow(); const last = document.getElementById('itemRows').lastElementChild; last.querySelector('.in-item').value = it.name; last.querySelector('.in-price').value = it.price; last.querySelector('.in-unit-label').value = it.unitLabel; last.querySelector('.in-qty').value = it.qty; last.querySelector('.in-unit').value = it.unit; });
         const tInps = document.querySelectorAll('.term-input'); if(r.terms) tInps.forEach((inp, idx) => inp.value = r.terms[idx] || "");
         updatePreview(); window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -471,23 +465,16 @@
     function resetForm() { document.getElementById('editingRecordId').value = ""; location.reload(); }
     function exportData() { const b = new Blob([JSON.stringify({ history: db, customers, banks }, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = "TTI_Backup.json"; a.click(); }
     function importData(e) { const reader = new FileReader(); reader.onload = (f) => { const d = JSON.parse(f.target.result); localStorage.setItem(DB_KEY, JSON.stringify(d.history)); localStorage.setItem(CUST_KEY, JSON.stringify(d.customers)); localStorage.setItem(BANK_KEY, JSON.stringify(d.banks)); location.reload(); }; reader.readAsText(e.target.files[0]); }
-    
     function saveCustomerFull() {
         const name = document.getElementById('custName').value.trim(), addr = document.getElementById('custAddr').value.trim(), email = document.getElementById('custEmail').value.trim(), tax = document.getElementById('custTax').value.trim();
         if(!name) return alert("ระบุชื่อลูกค้า"); syncToCloud({ onlyCustomer: true, custName: name, custAddr: addr, custEmail: email, custTax: tax });
         if (!customers.find(c => c.name === name)) { customers.push({ name, addr, email, tax }); localStorage.setItem(CUST_KEY, JSON.stringify(customers)); updateCustomerDropdown(); } alert("บันทึกลูกค้าแล้ว");
     }
-    
-    // แก้ไข: ปรับการบันทึก Property ธนาคารให้ครบ 4 ฟิลด์
     function saveBankFull() {
-        const name = document.getElementById('bankName').value.trim(), 
-              acc = document.getElementById('bankAccName').value.trim(), 
-              type = document.getElementById('bankType').value.trim(), 
-              no = document.getElementById('bankNo').value.trim();
+        const name = document.getElementById('bankName').value.trim(), acc = document.getElementById('bankAccName').value.trim(), type = document.getElementById('bankType').value.trim(), no = document.getElementById('bankNo').value.trim();
         if(!no) return alert("ระบุเลขบัญชี"); syncToCloud({ onlyBank: true, bank: { name, acc, type, no } });
         if (!banks.find(b => b.no === no)) { banks.push({ name, acc, type, no }); localStorage.setItem(BANK_KEY, JSON.stringify(banks)); updateBankDropdown(); } alert("บันทึกบัญชีแล้ว");
     }
-    
     function sendToCustomerEmail() { const email = document.getElementById('custEmail').value; if(!email) return alert("โปรดระบุอีเมล"); alert("เตรียมส่งไปยัง: " + email); }
 
     window.onload = () => { document.getElementById('inDate').value = new Date().toLocaleDateString('th-TH'); updateCustomerDropdown(); updateBankDropdown(); addRow(); renderHistory(); loadDataFromCloud(); };
