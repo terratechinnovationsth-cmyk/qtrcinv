@@ -6,6 +6,7 @@
     <title>TTI System - Terra Tech Innovations</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body { font-family: 'Sarabun', sans-serif; background-color: #f4f7f6; font-size: 14px; display: flex; flex-direction: column; min-height: 100vh; }
         .main-header { background: linear-gradient(135deg, #198754 0%, #0d5d3b 100%); color: white; padding: 15px 0; border-bottom: 4px solid #ffc107; }
@@ -347,7 +348,7 @@
 
     function addRow() {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td class="row-no"></td><td><input type="text" class="form-control form-control-sm in-item"></td><td><div class="input-group input-group-sm"><input type="number" class="form-control in-price"><span class="input-group-text">/</span><select class="form-select in-unit-label"><option value="ชิ้น">ชิ้น</option><option value="กรัม">กรัม</option><option value="กิโลกรัม">กิโลกรัม</option><option value="ถุง">ถุง</option><option value="ขวด">ขวด</option><option value="ตัน">ตัน</option><option value="ซอง">ซอง</option><option value="กล่อง">กล่อง</option><option value="ลัง">ลัง</option><option value="ต้น">ต้น</option><option value="ถาด">ถาด</option><option value="เม็ด">เม็ด</option><option value="เมล็ด">เมล็ด</option></select></div></td><td><input type="number" class="form-control form-control-sm in-qty"></td><td><select class="form-select form-select-sm in-unit"><option value="ชิ้น">ชิ้น</option><option value="กรัม">กรัม</option><option value="กิโลกรัม">กิโลกรัม</option><option value="ถุง">ถุง</option><option value="ขวด">ขวด</option><option value="ตัน">ตัน</option><option value="ซอง">ซอง</option><option value="กล่อง">กล่อง</option><option value="ลัง">ลัง</option><option value="ต้น">ต้น</option><option value="ถาด">ถาด</option><option value="เม็ด">เม็ด</option><option value="เมล็ด">เมล็ด</option></select></td><td class="text-end fw-bold"><span class="line-total-val">0.00</span></td><td class="text-center"><button class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove(); updatePreview(); updateRowNumbers();">×</button></td>`;
+        tr.innerHTML = `<td class="row-no"></td><td><input type="text" class="form-control form-control-sm in-item"></td><td><div class="input-group input-group-sm"><input type="number" class="form-control in-price"><span class="input-group-text">/</span><select class="form-select in-unit-label"><option value="ชิ้น">ชิ้น</option><option value="กรัม">กรัม</option><option value="กิโลกรัม">กิโลกรัม</option><option value="ถุง">ถุง</option><option value="ขวด">ขวด</option><option value="ตัน">ตัน</option><option value="ซอง">ซอง</option><option value="กล่อง">กล่อง</option><option value="ลัง">ลัง</option><option value="ต้น">ต้น</option><option value="ถาด">ถาด</option><option value="เม็ด">เม็ด</option><option value="เมล็ด">เมล็ด</option><option value="แคปซูล">แคปซูล</option></select></div></td><td><input type="number" class="form-control form-control-sm in-qty"></td><td><select class="form-select form-select-sm in-unit"><option value="ชิ้น">ชิ้น</option><option value="กรัม">กรัม</option><option value="กิโลกรัม">กิโลกรัม</option><option value="ถุง">ถุง</option><option value="ขวด">ขวด</option><option value="ตัน">ตัน</option><option value="ซอง">ซอง</option><option value="กล่อง">กล่อง</option><option value="ลัง">ลัง</option><option value="ต้น">ต้น</option><option value="ถาด">ถาด</option><option value="เม็ด">เม็ด</option><option value="เมล็ด">เมล็ด</option><option value="แคปซูล">แคปซูล</option></select></td><td class="text-end fw-bold"><span class="line-total-val">0.00</span></td><td class="text-center"><button class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove(); updatePreview(); updateRowNumbers();">×</button></td>`;
         document.getElementById('itemRows').appendChild(tr);
         updateRowNumbers();
     }
@@ -368,7 +369,6 @@
         const filtered = activeDb.filter(r => r.no.toLowerCase().includes(s) || (r.custName && r.custName.toLowerCase().includes(s)));
         const body = document.getElementById('historyTableBody');
         
-        // เพิ่มปุ่มพิมพ์ด่วนเข้าไปใน template
         body.innerHTML = filtered.slice().reverse().map(r => {
             let editTag = r.editCount > 0 ? ` <span style="color:red; font-weight:bold;">(แก้ไขครั้งที่ ${r.editCount})</span>` : "";
             return `<tr>
@@ -377,7 +377,10 @@
                 <td>${r.custName}${editTag}</td>
                 <td class="text-primary fw-bold">${r.total}</td>
                 <td>
-                    <button class="btn btn-outline-primary btn-sm py-0" onclick="quickPrintById(${r.id}, '${r.type}')">🖨️ พิมพ์</button>
+                    <div class="d-flex gap-1 justify-content-center">
+                        <button class="btn btn-outline-danger btn-sm py-0" onclick="quickPrintById(${r.id}, '${r.type}')">📄 PDF</button>
+                        <button class="btn btn-outline-success btn-sm py-0" onclick="downloadPngById(${r.id}, '${r.type}')">🖼️ PNG</button>
+                    </div>
                 </td>
                 <td class="d-flex gap-1 justify-content-center">
                     <button class="btn btn-info btn-sm py-0 text-white" onclick="viewRecordById(${r.id})">👁️</button>
@@ -458,12 +461,35 @@
     function updateBankDropdown() { const s = document.getElementById('bankSelect'); s.innerHTML = '<option value="">-- บัญชีที่บันทึกไว้ --</option>'; banks.forEach((b, i) => s.innerHTML += `<option value="${i}">${b.name}</option>`); }
     function selectBank(i) { if(i === "") return; const b = banks[i]; document.getElementById('bankName').value = b.name; document.getElementById('bankAccName').value = b.acc; document.getElementById('bankType').value = b.type; document.getElementById('bankNo').value = b.no; updatePreview(); }
     
-    // ฟังก์ชันพิมพ์ด่วน
+    // ฟังก์ชันพิมพ์ด่วนเป็น PDF / Print Dialog
     function quickPrintById(id, type) { 
         const r = db.find(x => x.id === id); 
         if(!r) return; 
+        currentViewingId = id; 
+        document.getElementById('viewModeController').style.display = 'flex'; 
         renderA4Data(r, type); 
-        setTimeout(() => window.print(), 500); 
+        setTimeout(() => { window.print(); closeViewMode(); }, 500); 
+    }
+
+    // ฟังก์ชันใหม่ ดาวน์โหลดด่วนเป็น PNG
+    function downloadPngById(id, type) {
+        const r = db.find(x => x.id === id); 
+        if(!r) return; 
+        currentViewingId = id; 
+        document.getElementById('viewModeController').style.display = 'flex'; 
+        renderA4Data(r, type); 
+        
+        // หน่วงเวลาเล็กน้อยเพื่อให้ภาพแบคกราวนด์และ Font โหลดเสร็จก่อนแคปหน้าจอ
+        setTimeout(() => {
+            const element = document.querySelector('.a4-page');
+            html2canvas(element, { scale: 2, useCORS: true }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `Document_${r.no}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                closeViewMode();
+            });
+        }, 500);
     }
 
     function viewRecordById(id) { currentViewingId = id; const r = db.find(x => x.id === id); if(!r) return; document.getElementById('viewModeController').style.display = 'flex'; renderA4Data(r, r.type); window.scrollTo({ top: document.querySelector('.preview-section').offsetTop, behavior: 'smooth' }); }
