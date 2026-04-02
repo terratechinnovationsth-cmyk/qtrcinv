@@ -320,7 +320,8 @@
             subtotal += total;
             if (lTotals[i]) lTotals[i].innerText = total.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
             if (item.value || p > 0) {
-                htmlItems += `<div class="item-row-print"><div class="c-desc">${i + 1}. ${item.value}</div><div class="c-uprice">${p.toLocaleString()} /${labels[i].value}</div><div class="c-qty">${q} ${units[i].value}</div><div class="c-total">${total.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</div></div>`;
+                // เพิ่มคำว่า บาท ใน updatePreview
+                htmlItems += `<div class="item-row-print"><div class="c-desc">${i + 1}. ${item.value}</div><div class="c-uprice">${p.toLocaleString()} บาท/${labels[i].value}</div><div class="c-qty">${q} ${units[i].value}</div><div class="c-total">${total.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})} บาท</div></div>`;
             }
         });
 
@@ -456,7 +457,8 @@
         let html = ''; let sub = 0;
         r.items.forEach((it, i) => { 
             const p = parseFloat(it.price) || 0; const q = parseFloat(it.qty) || 0; const total = p * q; sub += total;
-            html += `<div class="item-row-print"><div class="c-desc">${i+1}. ${it.name}</div><div class="c-uprice">${p.toLocaleString()} /${it.unitLabel}</div><div class="c-qty">${it.qty} ${it.unit}</div><div class="c-total">${total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div></div>`; 
+            // เพิ่มคำว่า บาท ใน renderA4Data
+            html += `<div class="item-row-print"><div class="c-desc">${i+1}. ${it.name}</div><div class="c-uprice">${p.toLocaleString()} บาท/${it.unitLabel}</div><div class="c-qty">${it.qty} ${it.unit}</div><div class="c-total">${total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} บาท</div></div>`; 
         });
         const disc = parseFloat(r.disc) || 0; const tRate = parseFloat(r.taxRate) || 0; const taxVal = (sub - disc) * (tRate / 100); const totalFinal = sub - disc + taxVal;
         document.getElementById('outItemList').innerHTML = html;
