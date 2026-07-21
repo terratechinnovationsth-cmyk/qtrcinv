@@ -61,6 +61,12 @@
         .f-bank-info { bottom: 141px; left: 123px; width: 300px; font-size: 11px; line-height: 1.4; text-align: left; }
         #viewModeController { display: none; margin-bottom: 15px; background: #343a40; padding: 10px; border-radius: 50px; flex-wrap: wrap; justify-content: center; }
 
+        /* การตั้งค่าตำแหน่งลายเซ็นต์ */
+        .sign-img { position: absolute; z-index: 3; width: 120px; height: auto; display: none; }
+        .sign-qt { bottom: 45px; left: 560px; } /* ตำแหน่งใบเสนอราคา (อนุมัติโดย) */
+        .sign-rc { bottom: 45px; left: 560px; } /* ตำแหน่งใบเสร็จรับเงิน (รับเงินโดย) */
+        .sign-inv { bottom: 45px; left: 160px; } /* ตำแหน่งใบส่งของ/ใบแจ้งหนี้ (ส่งมอบโดย) */
+
         @page { size: A4; margin: 0; }
         @media print { 
             html, body { width: 210mm; height: 297mm; margin: 0; padding: 0; background: #fff; }
@@ -179,6 +185,11 @@
             <textarea id="inTerms" class="form-control form-control-sm" rows="2" placeholder="ระบุเงื่อนไขและข้อกำหนด (ถ้ามี)" oninput="updatePreview()"></textarea>
         </div>
 
+        <div class="form-check form-switch mb-3 no-print d-flex justify-content-end align-items-center">
+            <input class="form-check-input me-2 mt-0" type="checkbox" id="toggleSignature" onchange="updatePreview()">
+            <label class="form-check-label fw-bold text-primary" for="toggleSignature" style="cursor: pointer;">✍️ ประทับลายเซ็นต์ (Book sign.png)</label>
+        </div>
+
         <div class="mt-3 no-print">
             <button class="btn btn-success btn-complete-save w-100 shadow fw-bold" id="btnMainSave" onclick="saveData()">💾 บันทึกรายการ</button>
         </div>
@@ -232,6 +243,7 @@
         <div class="data-field f-subtotal" id="outSubtotal"></div><div class="data-field f-discount" id="outDiscount"></div><div class="data-field f-tax" id="outTax"></div><div class="data-field f-grandtotal" id="outTotal"></div>
         <div class="data-field f-baht-text" id="outThaiBaht"></div>
         <div class="f-terms-container" id="outTerms"></div><div class="data-field f-bank-info" id="outBankInfo"></div>
+        <img id="outSignature" src="Book sign.png" class="sign-img">
     </div>
 </div>
 
@@ -302,7 +314,8 @@
 
     function updatePreview() {
         if (currentViewingId) return; 
-        document.getElementById('viewTemplate').src = document.getElementById('docType').value;
+        const docType = document.getElementById('docType').value;
+        document.getElementById('viewTemplate').src = docType;
         document.getElementById('outDate').innerText = document.getElementById('inDate').value;
         document.getElementById('outNo').innerText = document.getElementById('inNo').value;
         document.getElementById('outCustName').innerText = document.getElementById('custName').value;
@@ -352,6 +365,19 @@
         
         const termsText = document.getElementById('inTerms').value;
         document.getElementById('outTerms').innerHTML = `<div style="max-width:350px; line-height:1.4;">${termsText.replace(/\n/g, '<br>')}</div>`;
+
+        // จัดการลายเซ็นต์
+        const showSign = document.getElementById('toggleSignature').checked;
+        const signImg = document.getElementById('outSignature');
+        if (showSign) {
+            signImg.style.display = 'block';
+            signImg.className = 'sign-img'; // รีเซ็ตคลาส
+            if (docType === 'Quatation.png') signImg.classList.add('sign-qt');
+            else if (docType === 'Receipt.png') signImg.classList.add('sign-rc');
+            else if (docType === 'Delivery&invoice.png') signImg.classList.add('sign-inv');
+        } else {
+            signImg.style.display = 'none';
+        }
     }
 
     function addRow() {
@@ -423,14 +449,14 @@
             const oldRecord = db.find(x => x.id == editId); 
             editCount = (oldRecord && oldRecord.editCount ? oldRecord.editCount : 0) + 1; 
         }
-        const record = { id: Date.now(), timestamp: new Date().toLocaleString('th-TH'), no: document.getElementById('inNo').value, date: document.getElementById('inDate').value, custName: document.getElementById('custName').value, custAddr: document.getElementById('custAddr').value, custTax: document.getElementById('custTax').value, subtotal: document.getElementById('liveSubtotal').innerText, disc: document.getElementById('inDiscount').value, taxRate: document.getElementById('inTaxRate').value, taxVal: document.getElementById('liveTax').innerText, total: document.getElementById('liveTotal').innerText + " บาท", type: document.getElementById('docType').value, items, editCount, bank: { name: document.getElementById('bankName').value, acc: document.getElementById('bankAccName').value, type: document.getElementById('bankType').value, no: document.getElementById('bankNo').value }, terms: document.getElementById('inTerms').value };
+        const record = { id: Date.now(), timestamp: new Date().toLocaleString('th-TH'), no: document.getElementById('inNo').value, date: document.getElementById('inDate').value, custName: document.getElementById('custName').value, custAddr: document.getElementById('custAddr').value, custTax: document.getElementById('custTax').value, subtotal: document.getElementById('liveSubtotal').innerText, disc: document.getElementById('inDiscount').value, taxRate: document.getElementById('inTaxRate').value, taxVal: document.getElementById('liveTax').innerText, total: document.getElementById('liveTotal').innerText + " บาท", type: document.getElementById('docType').value, items, editCount, bank: { name: document.getElementById('bankName').value, acc: document.getElementById('bankAccName').value, type: document.getElementById('bankType').value, no: document.getElementById('bankNo').value }, terms: document.getElementById('inTerms').value, hasSignature: document.getElementById('toggleSignature').checked };
         const success = await syncToCloud(record);
         if(success) { alert("บันทึกข้อมูลเวอร์ชันใหม่สำเร็จ"); await loadDataFromCloud(); resetFormOnly(); }
         btn.disabled = false;
     }
 
     function resetFormOnly() {
-        document.getElementById('editingRecordId').value = ""; document.getElementById('inNo').value = ""; document.getElementById('custName').value = ""; document.getElementById('custAddr').value = ""; document.getElementById('custTax').value = ""; document.getElementById('inDiscount').value = "0"; document.getElementById('inTerms').value = ""; document.getElementById('itemRows').innerHTML = ""; addRow(); updatePreview();
+        document.getElementById('editingRecordId').value = ""; document.getElementById('inNo').value = ""; document.getElementById('custName').value = ""; document.getElementById('custAddr').value = ""; document.getElementById('custTax').value = ""; document.getElementById('inDiscount').value = "0"; document.getElementById('inTerms').value = ""; document.getElementById('toggleSignature').checked = false; document.getElementById('itemRows').innerHTML = ""; addRow(); updatePreview();
     }
 
     async function loadRecordById(id) {
@@ -450,6 +476,7 @@
         document.getElementById('bankType').value = r.bank.type;
         document.getElementById('bankNo').value = r.bank.no;
         document.getElementById('inTerms').value = r.terms || "";
+        document.getElementById('toggleSignature').checked = r.hasSignature || false;
         document.getElementById('itemRows').innerHTML = "";
         for (const it of r.items) {
             addRow(); 
@@ -526,6 +553,18 @@
         document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(totalFinal) + ")";
         document.getElementById('outBankInfo').innerHTML = `${r.bank.name}<br>${r.bank.acc}<br>${r.bank.type}<br>${r.bank.no}`;
         document.getElementById('outTerms').innerHTML = `<div style="max-width:350px; line-height:1.4;">${(r.terms || "").replace(/\n/g, '<br>')}</div>`;
+
+        // จัดการลายเซ็นต์สำหรับหน้า Preview (ดูประวัติ/พิมพ์ด่วน)
+        const signImg = document.getElementById('outSignature');
+        if (r.hasSignature) {
+            signImg.style.display = 'block';
+            signImg.className = 'sign-img'; // รีเซ็ตคลาส
+            if (type === 'Quatation.png') signImg.classList.add('sign-qt');
+            else if (type === 'Receipt.png') signImg.classList.add('sign-rc');
+            else if (type === 'Delivery&invoice.png') signImg.classList.add('sign-inv');
+        } else {
+            signImg.style.display = 'none';
+        }
     }
     
     function resetForm() { location.reload(); }
