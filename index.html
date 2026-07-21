@@ -174,6 +174,11 @@
         </div>
         <div class="thai-baht-live" id="liveThaiBaht">ตัวอักษร: (ศูนย์บาทถ้วน)</div>
 
+        <div class="mt-2 mb-2 no-print">
+            <label class="small fw-bold text-secondary">เงื่อนไขและข้อกำหนด</label>
+            <textarea id="inTerms" class="form-control form-control-sm" rows="2" placeholder="ระบุเงื่อนไขและข้อกำหนด (ถ้ามี)" oninput="updatePreview()"></textarea>
+        </div>
+
         <div class="mt-3 no-print">
             <button class="btn btn-success btn-complete-save w-100 shadow fw-bold" id="btnMainSave" onclick="saveData()">💾 บันทึกรายการ</button>
         </div>
@@ -344,6 +349,9 @@
         document.getElementById('outTax').innerText = taxVal.toLocaleString(undefined, {minimumFractionDigits:2}) + " บาท";
         document.getElementById('outTotal').innerText = grandTotal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + " บาท";
         document.getElementById('outThaiBaht').innerText = "(" + bahtStr + ")";
+        
+        const termsText = document.getElementById('inTerms').value;
+        document.getElementById('outTerms').innerHTML = `<div style="max-width:350px; line-height:1.4;">${termsText.replace(/\n/g, '<br>')}</div>`;
     }
 
     function addRow() {
@@ -415,14 +423,14 @@
             const oldRecord = db.find(x => x.id == editId); 
             editCount = (oldRecord && oldRecord.editCount ? oldRecord.editCount : 0) + 1; 
         }
-        const record = { id: Date.now(), timestamp: new Date().toLocaleString('th-TH'), no: document.getElementById('inNo').value, date: document.getElementById('inDate').value, custName: document.getElementById('custName').value, custAddr: document.getElementById('custAddr').value, custTax: document.getElementById('custTax').value, subtotal: document.getElementById('liveSubtotal').innerText, disc: document.getElementById('inDiscount').value, taxRate: document.getElementById('inTaxRate').value, taxVal: document.getElementById('liveTax').innerText, total: document.getElementById('liveTotal').innerText + " บาท", type: document.getElementById('docType').value, items, editCount, bank: { name: document.getElementById('bankName').value, acc: document.getElementById('bankAccName').value, type: document.getElementById('bankType').value, no: document.getElementById('bankNo').value } };
+        const record = { id: Date.now(), timestamp: new Date().toLocaleString('th-TH'), no: document.getElementById('inNo').value, date: document.getElementById('inDate').value, custName: document.getElementById('custName').value, custAddr: document.getElementById('custAddr').value, custTax: document.getElementById('custTax').value, subtotal: document.getElementById('liveSubtotal').innerText, disc: document.getElementById('inDiscount').value, taxRate: document.getElementById('inTaxRate').value, taxVal: document.getElementById('liveTax').innerText, total: document.getElementById('liveTotal').innerText + " บาท", type: document.getElementById('docType').value, items, editCount, bank: { name: document.getElementById('bankName').value, acc: document.getElementById('bankAccName').value, type: document.getElementById('bankType').value, no: document.getElementById('bankNo').value }, terms: document.getElementById('inTerms').value };
         const success = await syncToCloud(record);
         if(success) { alert("บันทึกข้อมูลเวอร์ชันใหม่สำเร็จ"); await loadDataFromCloud(); resetFormOnly(); }
         btn.disabled = false;
     }
 
     function resetFormOnly() {
-        document.getElementById('editingRecordId').value = ""; document.getElementById('inNo').value = ""; document.getElementById('custName').value = ""; document.getElementById('custAddr').value = ""; document.getElementById('custTax').value = ""; document.getElementById('inDiscount').value = "0"; document.getElementById('itemRows').innerHTML = ""; addRow(); updatePreview();
+        document.getElementById('editingRecordId').value = ""; document.getElementById('inNo').value = ""; document.getElementById('custName').value = ""; document.getElementById('custAddr').value = ""; document.getElementById('custTax').value = ""; document.getElementById('inDiscount').value = "0"; document.getElementById('inTerms').value = ""; document.getElementById('itemRows').innerHTML = ""; addRow(); updatePreview();
     }
 
     async function loadRecordById(id) {
@@ -441,6 +449,7 @@
         document.getElementById('bankAccName').value = r.bank.acc;
         document.getElementById('bankType').value = r.bank.type;
         document.getElementById('bankNo').value = r.bank.no;
+        document.getElementById('inTerms').value = r.terms || "";
         document.getElementById('itemRows').innerHTML = "";
         for (const it of r.items) {
             addRow(); 
@@ -516,6 +525,7 @@
         document.getElementById('outTotal').innerText = totalFinal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " บาท";
         document.getElementById('outThaiBaht').innerText = "(" + ThaiBaht(totalFinal) + ")";
         document.getElementById('outBankInfo').innerHTML = `${r.bank.name}<br>${r.bank.acc}<br>${r.bank.type}<br>${r.bank.no}`;
+        document.getElementById('outTerms').innerHTML = `<div style="max-width:350px; line-height:1.4;">${(r.terms || "").replace(/\n/g, '<br>')}</div>`;
     }
     
     function resetForm() { location.reload(); }
